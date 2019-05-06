@@ -1,5 +1,6 @@
 # php-fpm
-Dockerfile for PHP-FPM to use with Laravel
+
+![DockerHub](https://img.shields.io/docker/automated/p5ych0/php-fpm.svg) Dockerfile for [PHP-FPM](https://hub.docker.com/r/p5ych0/php-fpm) to use with Laravel
 
 Contains the following extensions:
 
