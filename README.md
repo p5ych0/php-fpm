@@ -4,6 +4,7 @@
 
 Contains the following extensions:
 
+* ds
 * gd
 * igbinary
 * redis
