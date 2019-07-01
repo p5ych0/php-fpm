@@ -8,6 +8,7 @@ RUN apt-get install -y \
       iputils-ping \
       procps \
       unzip \
+      sudo \
       supervisor
 
 RUN apt-get install -y \
@@ -51,6 +52,7 @@ WORKDIR /var/www/html
 RUN mkdir /var/log/php
 RUN chown 33:33 /var/log/php
 RUN chmod 0775 /var/log/php
+RUN chown 33:33 /var/www
 
 # Install composer
 ADD ./getcomposer.sh .
