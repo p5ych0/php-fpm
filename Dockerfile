@@ -10,7 +10,8 @@ RUN apt-get install -y \
       unzip \
       sudo \
       supervisor \
-      cron
+      cron \
+      autofs
 
 RUN apt-get install -y \
       libzip-dev \
@@ -18,7 +19,8 @@ RUN apt-get install -y \
       libpng-dev \
       libpq-dev \
       libfreetype6-dev \
-      libjpeg62-turbo-dev
+      libjpeg62-turbo-dev \
+      libxml2-dev
 
 RUN rm -r /var/lib/apt/lists/*
 
@@ -33,7 +35,10 @@ RUN docker-php-ext-install \
       zip \
       gd
 
+RUN apt-get clean -y
+
 RUN docker-php-ext-install opcache
+RUN docker-php-ext-install soap
 
 RUN pecl install -o -f igbinary
 RUN pecl install -o -f psr
