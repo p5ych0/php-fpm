@@ -9,7 +9,8 @@ RUN apt-get install -y \
       procps \
       unzip \
       sudo \
-      supervisor
+      supervisor \
+      cron
 
 RUN apt-get install -y \
       libzip-dev \
@@ -53,6 +54,13 @@ RUN mkdir /var/log/php
 RUN chown 33:33 /var/log/php
 RUN chmod 0775 /var/log/php
 RUN chown 33:33 /var/www
+
+#crontab
+COPY ./cron/root /var/spool/cron/crontabs/root
+RUN chown -R root:crontab /var/spool/cron/crontabs/root \
+ && chmod 600 /var/spool/cron/crontabs/root
+RUN touch /var/log/cron.log
+COPY /supervisor /etc/supervisor/conf.d/
 
 # Install composer
 ADD ./getcomposer.sh .
