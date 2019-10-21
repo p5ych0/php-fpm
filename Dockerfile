@@ -44,6 +44,7 @@ RUN apk add --no-cache --virtual .build-deps \
     libpng \
     libpng-dev \
     freetype \
+    postgresql-libs \
     postgresql-dev \
     freetype-dev \
     libjpeg-turbo \
