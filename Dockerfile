@@ -59,14 +59,13 @@ RUN docker-php-ext-install \
       pdo_pgsql \
       pgsql \
       zip \
-      gd
+      gd \
+      opcache \
+      soap
 
-RUN docker-php-ext-install opcache
-RUN docker-php-ext-install soap
-
-RUN pecl install -o -f igbinary
-RUN pecl install -o -f psr
-RUN pecl install -o -f ds
+RUN pecl install -o -f igbinary \
+    && pecl install -o -f psr \
+    && pecl install -o -f ds
 RUN pecl download redis && mv redis-*.tgz /tmp && cd /tmp && tar -xvzf `ls redis-*.tgz` && cd redis-* && phpize && ./configure --enable-redis-igbinary && make -j$(nproc) && make install
 RUN docker-php-ext-enable igbinary redis psr ds
 RUN rm -rf /tmp/*
@@ -82,20 +81,18 @@ COPY ./php.ini /usr/local/etc/php/php.ini
 WORKDIR /var/www/html
 
 RUN mkdir /var/log/php
-RUN chown nginx /var/log/php
-RUN chmod 0775 /var/log/php
-RUN chown nginx /var/www
+RUN chown nginx /var/log/php \
+    && chmod 0775 /var/log/php \
+    && chown nginx /var/www
 
 #crontab
 COPY ./cron/root /var/spool/cron/crontabs/root
-RUN chmod 600 /var/spool/cron/crontabs/root
-RUN touch /var/log/cron.log
+RUN chmod 600 /var/spool/cron/crontabs/root && touch /var/log/cron.log
 COPY /supervisor /etc/supervisor/conf.d/
 
 # Install composer
 ADD ./getcomposer.sh .
 RUN bash ./getcomposer.sh
-RUN cat /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 RUN rm getcomposer.sh
 RUN mv ./composer.phar /usr/local/bin/composer
 RUN php -r "copy('https://phar.phpunit.de/phpunit.phar', 'phpunit.phar');"
