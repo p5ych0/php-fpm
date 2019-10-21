@@ -48,29 +48,26 @@ RUN apk add --no-cache --virtual .build-deps \
     freetype-dev \
     libjpeg-turbo \
     libjpeg-turbo-dev \
-    libxml2-dev
-
-RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/
-
-RUN docker-php-ext-install \
+    libxml2-dev \
+    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/ \
+    && docker-php-ext-configure pgsql --with-pgsql=/usr/local/pgsql \
+    && docker-php-ext-install \
       intl \
       mbstring \
       pcntl \
-      pdo_pgsql \
       pgsql \
+      pdo_pgsql \
       zip \
       gd \
       opcache \
-      soap
-
-RUN pecl install -o -f igbinary \
+      soap \
+    && pecl install -o -f igbinary \
     && pecl install -o -f psr \
-    && pecl install -o -f ds
-RUN pecl download redis && mv redis-*.tgz /tmp && cd /tmp && tar -xvzf `ls redis-*.tgz` && cd redis-* && phpize && ./configure --enable-redis-igbinary && make -j$(nproc) && make install
-RUN docker-php-ext-enable igbinary redis psr ds
-RUN rm -rf /tmp/*
-
-RUN apk del .build-deps
+    && pecl install -o -f ds \
+    && pecl download redis && mv redis-*.tgz /tmp && cd /tmp && tar -xvzf `ls redis-*.tgz` && cd redis-* && phpize && ./configure --enable-redis-igbinary && make -j$(nproc) && make install \
+    && docker-php-ext-enable igbinary redis psr ds \
+    && rm -rf /tmp/* \
+    && apk del .build-deps
 
 RUN echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=7963\n\
 opcache.revalidate_freq=1\nopcache.fast_shutdown=1\nopcache.enable_cli=1\nopcache.enable=1\nopcache.validate_timestamps=1\n" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
@@ -80,8 +77,8 @@ COPY ./php.ini /usr/local/etc/php/php.ini
 
 WORKDIR /var/www/html
 
-RUN mkdir /var/log/php
-RUN chown nginx /var/log/php \
+RUN mkdir /var/log/php \
+    && chown nginx /var/log/php \
     && chmod 0775 /var/log/php \
     && chown nginx /var/www
 
@@ -92,9 +89,9 @@ COPY /supervisor /etc/supervisor/conf.d/
 
 # Install composer
 ADD ./getcomposer.sh .
-RUN bash ./getcomposer.sh
-RUN rm getcomposer.sh
-RUN mv ./composer.phar /usr/local/bin/composer
-RUN php -r "copy('https://phar.phpunit.de/phpunit.phar', 'phpunit.phar');"
-RUN chmod +x phpunit.phar
-RUN mv phpunit.phar /usr/local/bin/phpunit
+RUN bash ./getcomposer.sh \
+    && rm getcomposer.sh \
+    && mv ./composer.phar /usr/local/bin/composer \
+    && php -r "copy('https://phar.phpunit.de/phpunit.phar', 'phpunit.phar');" \
+    && chmod +x phpunit.phar \
+    && mv phpunit.phar /usr/local/bin/phpunit
