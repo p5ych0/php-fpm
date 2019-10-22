@@ -18,6 +18,7 @@ RUN apk add --no-cache --virtual .run-deps \
     postgresql-libs \
     libjpeg-turbo \
     libpng \
+    libzip \
     icu-libs \
     freetype \
     tar \
