@@ -74,7 +74,7 @@ opcache.revalidate_freq=1\nopcache.fast_shutdown=1\nopcache.enable_cli=1\nopcach
 COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY ./php.ini /usr/local/etc/php/php.ini
 COPY ./cron/root /var/spool/cron/crontabs/root
-COPY /supervisor /etc/supervisor/conf.d/
+COPY /supervisor /etc/supervisor
 ADD ./getcomposer.sh .
 
 RUN mkdir /var/log/php \
