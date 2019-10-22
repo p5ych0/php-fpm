@@ -21,8 +21,7 @@ RUN apk add --no-cache --virtual .run-deps \
     libzip \
     icu-libs \
     freetype \
-    tar \
-    && chown www-data /var/www/html
+    tar
 
 RUN apk add --no-cache --virtual .build-deps \
     gcc \
@@ -79,9 +78,10 @@ COPY /supervisor/laravel.ini /etc/supervisor.d/laravel.ini
 ADD ./getcomposer.sh .
 
 RUN mkdir /var/log/php \
-    && chown www-data /var/log/php \
+    && mkdir /var/log/supervisor \
+    && chown www-data:www-data /var/log/php \
     && chmod 0775 /var/log/php \
-    && chown www-data -R /var/www \
+    && chown www-data:www-data -R /var/www \
     && chmod 600 /var/spool/cron/crontabs/root && touch /var/log/cron.log \
     && bash ./getcomposer.sh \
     && rm getcomposer.sh \
