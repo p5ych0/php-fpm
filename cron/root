@@ -1,2 +1,2 @@
 # scheduler
-* * * * * /usr/local/bin/php /var/www/html/artisan schedule:run >> /dev/null 2>&1
+* * * * * sudo -u www-data /usr/local/bin/php /var/www/html/artisan schedule:run >> /dev/null 2>&1
