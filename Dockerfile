@@ -46,6 +46,7 @@ RUN apk add --no-cache --virtual .build-deps \
     icu-dev \
     libpng-dev \
     postgresql-dev \
+    oniguruma-dev \
     freetype-dev \
     libjpeg-turbo-dev \
     libxml2-dev \
