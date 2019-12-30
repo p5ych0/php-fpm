@@ -2,6 +2,7 @@ FROM php:fpm-alpine
 
 RUN apk --update add --no-cache --virtual .run-deps \
     bash \
+    bash-completion \
     curl \
     diffutils \
     grep \
@@ -54,6 +55,8 @@ RUN apk add --no-cache --virtual .build-deps \
     && docker-php-ext-install \
       bcmath \
       intl \
+      exif \
+      gmp \
       mbstring \
       pcntl \
       pgsql \
