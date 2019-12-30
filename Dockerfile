@@ -65,7 +65,7 @@ RUN apk add --no-cache --virtual .build-deps \
       gd \
       opcache \
       soap \
-    && pecl install -o -f imagick && \
+    && pecl install -o -f imagick \
     && pecl install -o -f igbinary \
     && pecl install -o -f psr \
     && pecl install -o -f ds \
