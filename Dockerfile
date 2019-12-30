@@ -1,8 +1,6 @@
 FROM php:fpm-alpine
 
-RUN apk update
-
-RUN apk add --no-cache --virtual .run-deps \
+RUN apk --update add --no-cache --virtual .run-deps \
     bash \
     curl \
     diffutils \
@@ -45,14 +43,16 @@ RUN apk add --no-cache --virtual .build-deps \
     libzip-dev \
     icu-dev \
     libpng-dev \
+    imagemagick-dev \
     postgresql-dev \
     oniguruma-dev \
     freetype-dev \
     libjpeg-turbo-dev \
     libxml2-dev \
-    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/ \
+    && docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ --with-png=/usr/include/ \
     && docker-php-ext-configure pgsql -with-pgsql=/usr/include/ \
     && docker-php-ext-install \
+      bcmath \
       intl \
       mbstring \
       pcntl \
@@ -62,11 +62,12 @@ RUN apk add --no-cache --virtual .build-deps \
       gd \
       opcache \
       soap \
+    && pecl install -o -f imagick && \
     && pecl install -o -f igbinary \
     && pecl install -o -f psr \
     && pecl install -o -f ds \
     && pecl download redis && mv redis-*.tgz /tmp && cd /tmp && tar -xvzf `ls redis-*.tgz` && cd redis-* && phpize && ./configure --enable-redis-igbinary && make -j$(nproc) && make install \
-    && docker-php-ext-enable igbinary redis psr ds \
+    && docker-php-ext-enable igbinary imagick redis psr ds \
     && rm -rf /tmp/* \
     && apk del .build-deps \
     && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=7963\n\

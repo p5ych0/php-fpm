@@ -4,8 +4,10 @@
 
 Contains the following extensions:
 
+* bcmath
 * ds
 * gd
+* imagick
 * igbinary
 * redis
 * pgsql
@@ -13,4 +15,6 @@ Contains the following extensions:
 * intl
 * mbstring
 * pcntl
+* soap
 * zip
+etc.
