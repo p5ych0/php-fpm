@@ -9,6 +9,7 @@ RUN apk --update add --no-cache --virtual .run-deps \
     gmp \
     sed \
     openssl \
+    imagemagick \
     mc \
     wget \
     net-tools \
