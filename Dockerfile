@@ -1,4 +1,4 @@
-FROM php:7.4-fpm-alpine
+FROM php:7-fpm-alpine
 
 RUN apk --update add --no-cache --virtual .run-deps \
     bash \
