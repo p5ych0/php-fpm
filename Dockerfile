@@ -79,7 +79,7 @@ RUN apk add --no-cache --virtual .build-deps \
     && docker-php-ext-enable igbinary imagick mongodb raphf redis psr ds \
     && rm -rf /tmp/* \
     && apk del .build-deps \
-    && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=7963\n\
+    && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=7963\nopcache.jit_buffer_size=32M\n\
 opcache.revalidate_freq=0\nopcache.fast_shutdown=1\nopcache.enable_cli=1\nopcache.enable=1\nopcache.validate_timestamps=1\n" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
