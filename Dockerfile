@@ -9,7 +9,7 @@ RUN apk --update add --no-cache --virtual .run-deps \
     gmp \
     sed \
     openssl \
-    imagemagick \
+#    imagemagick \
     mc \
     wget \
     net-tools \
@@ -47,7 +47,7 @@ RUN apk add --no-cache --virtual .build-deps \
     icu-dev \
     gmp-dev \
     libpng-dev \
-    imagemagick-dev \
+#    imagemagick-dev \
     postgresql-dev \
     oniguruma-dev \
     freetype-dev \
@@ -69,14 +69,14 @@ RUN apk add --no-cache --virtual .build-deps \
       opcache \
       soap \
       sockets \
-    && pecl install -o -f imagick \
+#    && pecl install -o -f imagick \
     && pecl install -o -f igbinary \
     && pecl install -o -f psr \
     && pecl install -o -f ds \
     && pecl install -o -f raphf \
     && pecl install -o -f mongodb \
     && pecl download redis && mv redis-*.tgz /tmp && cd /tmp && tar -xvzf `ls redis-*.tgz` && cd redis-* && phpize && ./configure --enable-redis-igbinary && make -j$(nproc) && make install \
-    && docker-php-ext-enable igbinary imagick mongodb raphf redis psr ds \
+    && docker-php-ext-enable igbinary mongodb raphf redis psr ds \
     && rm -rf /tmp/* \
     && apk del .build-deps \
     && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=7963\nopcache.jit_buffer_size=32M\n\

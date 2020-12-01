@@ -7,7 +7,7 @@ Contains the following extensions:
 * bcmath
 * ds
 * gd
-* imagick
+* imagick _not build so far_
 * igbinary
 * redis
 * pgsql
