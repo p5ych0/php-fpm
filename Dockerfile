@@ -64,6 +64,7 @@ RUN apk add --no-cache --virtual .build-deps \
       pcntl \
       pgsql \
       pdo_pgsql \
+      pdo_mysql \
       zip \
       gd \
       opcache \
@@ -79,8 +80,9 @@ RUN apk add --no-cache --virtual .build-deps \
     && docker-php-ext-enable igbinary mongodb raphf redis psr ds \
     && rm -rf /tmp/* \
     && apk del .build-deps \
-    && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=7963\nopcache.jit_buffer_size=32M\n\
-opcache.revalidate_freq=0\nopcache.fast_shutdown=1\nopcache.enable_cli=1\nopcache.enable=1\nopcache.validate_timestamps=1\n" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+    && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=16229\nopcache.jit_buffer_size=32M\n\
+opcache.revalidate_freq=600\nopcache.fast_shutdown=1\nopcache.enable_cli=1\nopcache.enable=1\nopcache.validate_timestamps=1\nopcache.enable_file_override=0\n\
+opcache.preload=/var/www/html/preload.php\nopcache.preload_user=www-data\n" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY ./php.ini /usr/local/etc/php/php.ini
