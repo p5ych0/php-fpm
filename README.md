@@ -59,3 +59,5 @@ Contains the following extensions:
 * zip
 * zlib
 * Zend OPcache + optional preload set with env var _PHP_OPCACHE_PRELOAD=path/to/preload.php_
+
+includes BrowsCAP
