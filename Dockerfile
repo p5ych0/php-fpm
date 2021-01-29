@@ -11,7 +11,8 @@ RUN apk --update add --no-cache --virtual .run-deps \
     gmp \
     sed \
     openssl \
-#    imagemagick \
+    gettext \
+    imagemagick \
     mc \
     wget \
     net-tools \
@@ -39,6 +40,7 @@ RUN apk add --no-cache --virtual .build-deps \
     libxslt-dev \
     gd-dev \
     geoip-dev \
+    gettext-dev \
     perl-dev \
     unzip \
     zip \
@@ -49,7 +51,7 @@ RUN apk add --no-cache --virtual .build-deps \
     icu-dev \
     gmp-dev \
     libpng-dev \
-#    imagemagick-dev \
+    imagemagick-dev \
     postgresql-dev \
     oniguruma-dev \
     freetype-dev \
@@ -57,11 +59,16 @@ RUN apk add --no-cache --virtual .build-deps \
     libxml2-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure pgsql -with-pgsql=/usr/include/ \
+    && mkdir -p /usr/src/php/ext/imagick; \
+    curl -fsSL https://github.com/Imagick/imagick/archive/06116aa24b76edaf6b1693198f79e6c295eda8a9.tar.gz | tar xvz -C "/usr/src/php/ext/imagick" --strip 1 \
     && docker-php-ext-install \
       bcmath \
+      calendar \
       intl \
       exif \
       gmp \
+      gettext \
+      imagick \
       mbstring \
       pcntl \
       pgsql \
@@ -72,7 +79,6 @@ RUN apk add --no-cache --virtual .build-deps \
       opcache \
       soap \
       sockets \
-#    && pecl install -o -f imagick \
     && pecl install -o -f igbinary \
     && pecl install -o -f psr \
     && pecl install -o -f ds \
@@ -84,7 +90,7 @@ RUN apk add --no-cache --virtual .build-deps \
     && apk del .build-deps \
     && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=16229\nopcache.jit_buffer_size=32M\n\
 opcache.revalidate_freq=600\nopcache.fast_shutdown=1\nopcache.enable_cli=1\nopcache.enable=1\nopcache.validate_timestamps=1\nopcache.enable_file_override=0\n\
-opcache.preload=${PHP_OPCACHE_PRELOAD}\nopcache.preload_user=www-data\n" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+opcache.preload=\${PHP_OPCACHE_PRELOAD}\nopcache.preload_user=www-data\n" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 RUN wget http://browscap.org/stream?q=Full_PHP_BrowsCapINI -O /usr/local/etc/php/browscap.ini
 COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
