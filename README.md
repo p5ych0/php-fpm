@@ -58,6 +58,6 @@ Contains the following extensions:
 * xmlwriter
 * zip
 * zlib
-* Zend OPcache + optional preload set with env var _PHP_OPCACHE_PRELOAD=path/to/preload.php_
+* Zend OPcache
 
 optionally may includes BrowsCap

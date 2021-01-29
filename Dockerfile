@@ -1,6 +1,4 @@
-FROM php:7-fpm-alpine
-
-ENV PHP_OPCACHE_PRELOAD=""
+FROM php:7.3-fpm-alpine
 
 RUN apk --update add --no-cache --virtual .run-deps \
     bash \
@@ -82,9 +80,8 @@ RUN apk add --no-cache --virtual .build-deps \
     && docker-php-ext-enable igbinary imagick mongodb raphf redis psr ds \
     && rm -rf /tmp/* \
     && apk del .build-deps \
-    && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=16229\nopcache.jit_buffer_size=32M\n\
-opcache.revalidate_freq=600\nopcache.fast_shutdown=1\nopcache.enable_cli=1\nopcache.enable=1\nopcache.validate_timestamps=1\nopcache.enable_file_override=0\n\
-opcache.preload=\${PHP_OPCACHE_PRELOAD}\nopcache.preload_user=www-data\n" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+    && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=16229\n\
+opcache.revalidate_freq=600\nopcache.fast_shutdown=1\nopcache.enable_cli=1\nopcache.enable=1\nopcache.validate_timestamps=1\nopcache.enable_file_override=0\n" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 # RUN wget http://browscap.org/stream?q=Full_PHP_BrowsCapINI -O /usr/local/etc/php/browscap.ini
 COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
