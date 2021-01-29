@@ -50,7 +50,6 @@ Contains the following extensions:
 * xml
 * xmlreader
 * xmlwriter
-* Zend OPcache
 * zip
 * zlib
 * Zend OPcache
