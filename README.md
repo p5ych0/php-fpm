@@ -11,7 +11,7 @@ Contains the following extensions:
 * curl
 * date
 * dom
-* ds
+* ereg
 * exif
 * fileinfo
 * filter
@@ -21,13 +21,11 @@ Contains the following extensions:
 * gmp
 * hash
 * iconv
-* igbinary
-* imagick
 * intl
 * json
 * libxml
 * mbstring
-* mongodb
+* mhash
 * mysqlnd
 * openssl
 * pcntl
@@ -39,16 +37,12 @@ Contains the following extensions:
 * pgsql
 * Phar
 * posix
-* psr
-* raphf
 * readline
-* redis
 * Reflection
 * session
 * SimpleXML
 * soap
 * sockets
-* sodium
 * SPL
 * sqlite3
 * standard
@@ -56,6 +50,7 @@ Contains the following extensions:
 * xml
 * xmlreader
 * xmlwriter
+* Zend OPcache
 * zip
 * zlib
-* Zend OPcache + optional preload set with env var _PHP_OPCACHE_PRELOAD=path/to/preload.php_
+* Zend OPcache

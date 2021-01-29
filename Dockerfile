@@ -1,6 +1,4 @@
-FROM php:fpm-alpine
-
-ENV PHP_OPCACHE_PRELOAD=""
+FROM php:5.6-fpm-alpine
 
 RUN apk --update add --no-cache --virtual .run-deps \
     bash \
@@ -32,7 +30,6 @@ RUN apk add --no-cache --virtual .build-deps \
     libc-dev \
     make \
     cmake \
-    openssl-dev \
     pcre-dev \
     zlib-dev \
     linux-headers \
@@ -57,10 +54,8 @@ RUN apk add --no-cache --virtual .build-deps \
     freetype-dev \
     libjpeg-turbo-dev \
     libxml2-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure gd -enable-gd-native-ttf --with-jpeg-dir=/usr/lib --with-freetype-dir=/usr/include/freetype2 \
     && docker-php-ext-configure pgsql -with-pgsql=/usr/include/ \
-    && mkdir -p /usr/src/php/ext/imagick; \
-    curl -fsSL https://github.com/Imagick/imagick/archive/06116aa24b76edaf6b1693198f79e6c295eda8a9.tar.gz | tar xvz -C "/usr/src/php/ext/imagick" --strip 1 \
     && docker-php-ext-install \
       bcmath \
       calendar \
@@ -68,7 +63,6 @@ RUN apk add --no-cache --virtual .build-deps \
       exif \
       gmp \
       gettext \
-      imagick \
       mbstring \
       pcntl \
       pgsql \
@@ -79,18 +73,11 @@ RUN apk add --no-cache --virtual .build-deps \
       opcache \
       soap \
       sockets \
-    && pecl install -o -f igbinary \
-    && pecl install -o -f psr \
-    && pecl install -o -f ds \
-    && pecl install -o -f raphf \
-    && pecl install -o -f mongodb \
-    && pecl download redis && mv redis-*.tgz /tmp && cd /tmp && tar -xvzf `ls redis-*.tgz` && cd redis-* && phpize && ./configure --enable-redis-igbinary && make -j$(nproc) && make install \
-    && docker-php-ext-enable igbinary mongodb raphf redis psr ds \
+    && pecl install -o -f imagick \
     && rm -rf /tmp/* \
     && apk del .build-deps \
-    && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=16229\nopcache.jit_buffer_size=32M\n\
-opcache.revalidate_freq=600\nopcache.fast_shutdown=1\nopcache.enable_cli=1\nopcache.enable=1\nopcache.validate_timestamps=1\nopcache.enable_file_override=0\n\
-opcache.preload=\${PHP_OPCACHE_PRELOAD}\nopcache.preload_user=www-data\n" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+    && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=16229\n\
+opcache.revalidate_freq=600\nopcache.fast_shutdown=1\nopcache.enable_cli=1\nopcache.enable=1\nopcache.validate_timestamps=1\nopcache.enable_file_override=0\n" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY ./php.ini /usr/local/etc/php/php.ini
