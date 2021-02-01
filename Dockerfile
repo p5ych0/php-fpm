@@ -60,6 +60,7 @@ RUN apk add --no-cache --virtual .build-deps \
       intl \
       exif \
       gmp \
+      mysqli \
       mbstring \
       pcntl \
       pgsql \

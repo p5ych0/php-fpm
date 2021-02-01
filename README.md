@@ -28,6 +28,7 @@ Contains the following extensions:
 * libxml
 * mbstring
 * mongodb
+* mysqli
 * mysqlnd
 * openssl
 * pcntl
