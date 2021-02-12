@@ -7,6 +7,7 @@ RUN apk --update add --no-cache --virtual .run-deps \
     bash-completion \
     curl \
     diffutils \
+    git \
     grep \
     gmp \
     sed \
