@@ -9,6 +9,7 @@ RUN apk --update add --no-cache --virtual .run-deps \
     diffutils \
     grep \
     gmp \
+    git \
     sed \
     openssl \
     gettext \
