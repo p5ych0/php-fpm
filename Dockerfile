@@ -86,8 +86,9 @@ RUN apk add --no-cache --virtual .build-deps \
     && pecl install -o -f ds \
     && pecl install -o -f raphf \
     && pecl install -o -f mongodb \
+    && pecl install -o -f swoole \
     && pecl download redis && mv redis-*.tgz /tmp && cd /tmp && tar -xvzf `ls redis-*.tgz` && cd redis-* && phpize && ./configure --enable-redis-igbinary && make -j$(nproc) && make install \
-    && docker-php-ext-enable igbinary mongodb raphf redis psr ds \
+    && docker-php-ext-enable igbinary mongodb raphf redis psr ds swoole \
     && rm -rf /tmp/* \
     && apk del .build-deps \
     && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=16229\nopcache.jit_buffer_size=32M\n\
