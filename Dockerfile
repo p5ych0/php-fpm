@@ -22,6 +22,7 @@ RUN apk --update add --no-cache --virtual .run-deps \
     supervisor \
     postgresql-libs \
     libjpeg-turbo \
+    libgomp \
     libpng \
     libzip \
     icu-libs \
