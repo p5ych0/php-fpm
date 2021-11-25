@@ -2,8 +2,11 @@ FROM php:8.0-cli-alpine
 
 ENV PHP_OPCACHE_PRELOAD=""
 ENV PHP_OPCACHE_FREQ=600
+ENV NUMPROCS=1
 
-RUN apk --update add --no-cache --virtual .run-deps \
+RUN echo http://dl-2.alpinelinux.org/alpine/edge/community/ >> /etc/apk/repositories
+RUN apk update && apk upgrade && \
+    apk --update add --no-cache --virtual .run-deps \
     bash \
     bash-completion \
     curl \
@@ -12,6 +15,7 @@ RUN apk --update add --no-cache --virtual .run-deps \
     grep \
     gmp \
     sed \
+    libcap \
     openssl \
     gettext \
     imagemagick \
@@ -19,6 +23,7 @@ RUN apk --update add --no-cache --virtual .run-deps \
     wget \
     net-tools \
     procps \
+    shadow \
     sudo \
     supervisor \
     postgresql-libs \
@@ -27,7 +32,8 @@ RUN apk --update add --no-cache --virtual .run-deps \
     libzip \
     icu-libs \
     freetype \
-    tar
+    tar \
+    vim
 
 RUN apk add --no-cache --virtual .build-deps \
     gcc \
