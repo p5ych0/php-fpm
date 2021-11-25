@@ -1,4 +1,4 @@
-FROM php:cli-alpine
+FROM php:8.0-cli-alpine
 
 ENV PHP_OPCACHE_PRELOAD=""
 ENV PHP_OPCACHE_FREQ=600
