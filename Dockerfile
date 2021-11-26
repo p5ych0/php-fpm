@@ -114,9 +114,6 @@ RUN mkdir /var/log/php \
     && chmod 600 /var/spool/cron/crontabs/root && touch /var/log/cron.log \
     && bash ./getcomposer.sh \
     && rm getcomposer.sh \
-    && mv ./composer.phar /usr/local/bin/composer \
-    && php -r "copy('https://phar.phpunit.de/phpunit.phar', 'phpunit.phar');" \
-    && chmod +x phpunit.phar \
-    && mv phpunit.phar /usr/local/bin/phpunit
+    && mv ./composer.phar /usr/local/bin/composer
 
 WORKDIR /var/www/html
