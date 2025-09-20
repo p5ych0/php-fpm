@@ -1,112 +1,220 @@
-FROM php:7-fpm-alpine
+# syntax=docker/dockerfile:1
+FROM php:7-fpm-alpine AS base
 
+# Environment variables for OpenResty compatibility
 ENV PHP_OPCACHE_PRELOAD=""
 ENV PHP_OPCACHE_FREQ=600
+ENV PUID=82
+ENV PGID=82
+ENV USER_NAME=www-data
+ENV GROUP_NAME=www-data
 
-RUN apk --update add --no-cache --virtual .run-deps \
-    bash \
-    bash-completion \
-    curl \
-    diffutils \
-    git \
-    grep \
-    gmp \
-    sed \
-    openssl \
-    imagemagick \
-    mc \
-    wget \
-    net-tools \
-    procps \
-    sudo \
-    supervisor \
-    postgresql-libs \
-    libjpeg-turbo \
-    libgomp \
-    libpng \
-    libzip \
-    icu-libs \
-    freetype \
-    tar
+# Install runtime dependencies
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk --update add --no-cache \
+        bash \
+        bash-completion \
+        curl \
+        diffutils \
+        git \
+        grep \
+        gmp \
+        sed \
+        openssl \
+        imagemagick \
+        mc \
+        wget \
+        net-tools \
+        procps \
+        sudo \
+        supervisor \
+        postgresql-libs \
+        libjpeg-turbo \
+        libgomp \
+        libpng \
+        libzip \
+        icu-libs \
+        freetype \
+        tar \
+        shadow \
+        su-exec \
+        gettext
 
-RUN apk add --no-cache --virtual .build-deps \
-    gcc \
-    libc-dev \
-    make \
-    cmake \
-    openssl-dev \
-    pcre-dev \
-    zlib-dev \
-    linux-headers \
-    gnupg \
-    libxslt-dev \
-    gd-dev \
-    geoip-dev \
-    perl-dev \
-    unzip \
-    zip \
-    g++ \
-    autoconf \
-    automake \
-    libzip-dev \
-    icu-dev \
-    gmp-dev \
-    libpng-dev \
-    imagemagick-dev \
-    postgresql-dev \
-    oniguruma-dev \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    libxml2-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-configure pgsql -with-pgsql=/usr/include/ \
-    && docker-php-ext-install \
-      bcmath \
-      intl \
-      exif \
-      gmp \
-      mbstring \
-      pcntl \
-      pgsql \
-      pdo_pgsql \
-      pdo_mysql \
-      zip \
-      gd \
-      opcache \
-      soap \
-      sockets \
-    && pecl install -o -f imagick \
-    && pecl install -o -f igbinary \
-    && pecl install -o -f psr \
-    && pecl install -o -f ds \
-    && pecl install -o -f raphf \
-    && pecl install -o -f mongodb \
-    && pecl download redis && mv redis-*.tgz /tmp && cd /tmp && tar -xvzf `ls redis-*.tgz` && cd redis-* && phpize && ./configure --enable-redis-igbinary && make -j$(nproc) && make install \
-    && docker-php-ext-enable igbinary imagick mongodb raphf redis psr ds \
-    && rm -rf /tmp/* \
-    && apk del .build-deps \
-    && echo -e "opcache.memory_consumption=192\nopcache.interned_strings_buffer=16\nopcache.max_accelerated_files=16229\n\
-opcache.revalidate_freq=\${PHP_OPCACHE_FREQ}\nopcache.fast_shutdown=1\nopcache.enable_cli=1\nopcache.enable=1\nopcache.validate_timestamps=1\nopcache.enable_file_override=0\n\
-opcache.preload=\${PHP_OPCACHE_PRELOAD}\nopcache.preload_user=www-data\n" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+# Build stage for extensions
+FROM base AS builder
 
-# RUN wget http://browscap.org/stream?q=Full_PHP_BrowsCapINI -O /usr/local/etc/php/browscap.ini
-COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
+# Install build dependencies
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --no-cache --virtual .build-deps \
+        gcc \
+        libc-dev \
+        make \
+        cmake \
+        openssl-dev \
+        pcre-dev \
+        zlib-dev \
+        linux-headers \
+        gnupg \
+        libxslt-dev \
+        gd-dev \
+        geoip-dev \
+        perl-dev \
+        unzip \
+        zip \
+        g++ \
+        autoconf \
+        automake \
+        libzip-dev \
+        icu-dev \
+        gmp-dev \
+        libpng-dev \
+        imagemagick-dev \
+        postgresql-dev \
+        oniguruma-dev \
+        freetype-dev \
+        libjpeg-turbo-dev \
+        libxml2-dev
+
+# Configure and install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-configure pgsql -with-pgsql=/usr/include/ && \
+    docker-php-ext-install -j$(nproc) \
+        bcmath \
+        intl \
+        exif \
+        gmp \
+        mbstring \
+        pcntl \
+        pgsql \
+        pdo_pgsql \
+        pdo_mysql \
+        zip \
+        gd \
+        opcache \
+        soap \
+        sockets
+
+# Install PECL extensions (MongoDB version compatible with PHP 7.4)
+RUN pecl install -o -f imagick igbinary psr ds raphf mongodb-1.17.2
+
+# Custom Redis installation with igbinary support
+RUN --mount=type=cache,target=/tmp/redis-build \
+    pecl download redis && \
+    tar -xf redis-*.tgz -C /tmp/redis-build --strip-components=1 && \
+    cd /tmp/redis-build && \
+    phpize && \
+    ./configure --enable-redis-igbinary && \
+    make -j$(nproc) && \
+    make install
+
+# Enable all extensions
+RUN docker-php-ext-enable igbinary imagick mongodb raphf redis psr ds
+
+# Final stage
+FROM base AS final
+
+# Copy built extensions from builder stage
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+
+# Configure OPcache with dynamic user support
+RUN { \
+        echo 'opcache.memory_consumption=192'; \
+        echo 'opcache.interned_strings_buffer=16'; \
+        echo 'opcache.max_accelerated_files=16229'; \
+        echo 'opcache.revalidate_freq=${PHP_OPCACHE_FREQ}'; \
+        echo 'opcache.fast_shutdown=1'; \
+        echo 'opcache.enable_cli=1'; \
+        echo 'opcache.enable=1'; \
+        echo 'opcache.validate_timestamps=1'; \
+        echo 'opcache.enable_file_override=0'; \
+        echo 'opcache.preload=${PHP_OPCACHE_PRELOAD}'; \
+        echo 'opcache.preload_user=${USER_NAME}'; \
+    } > /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+
+# Copy configuration files
+COPY ./www.conf.template /usr/local/etc/php-fpm.d/www.conf.template
 COPY ./php.ini /usr/local/etc/php/php.ini
-COPY ./cron/root /var/spool/cron/crontabs/root
-COPY /supervisor/laravel.ini /etc/supervisor.d/laravel.ini
-ADD ./getcomposer.sh .
+COPY ./cron/root.template /var/spool/cron/crontabs/root.template
+COPY ./supervisor/laravel.ini.template /etc/supervisor.d/laravel.ini.template
 
-RUN mkdir /var/log/php \
-    && mkdir /var/log/supervisor \
-    && chown www-data:www-data /var/log/php \
-    && chmod 0775 /var/log/php \
-    && chown www-data:www-data -R /var/www \
-    && chmod 600 /var/spool/cron/crontabs/root && touch /var/log/cron.log \
-    && bash ./getcomposer.sh \
-    && rm getcomposer.sh \
-    && mv ./composer.phar /usr/local/bin/composer \
-    && wget https://phar.phpunit.de/phpunit.phar -O phpunit.phar \
-    && chmod +x phpunit.phar \
-    && mv phpunit.phar /usr/local/bin/phpunit
+# Install Composer with integrity verification
+COPY ./getcomposer.sh /tmp/getcomposer.sh
+RUN --mount=type=cache,target=/tmp/composer-cache \
+    cd /tmp && \
+    bash ./getcomposer.sh && \
+    mv ./composer.phar /usr/local/bin/composer && \
+    rm ./getcomposer.sh
 
-WORKDIR /var/www/html
+# Install PHPUnit compatible with PHP 7.4
+RUN --mount=type=cache,target=/tmp/phpunit-cache \
+    wget https://phar.phpunit.de/phpunit-9.phar -O /tmp/phpunit.phar && \
+    chmod +x /tmp/phpunit.phar && \
+    mv /tmp/phpunit.phar /usr/local/bin/phpunit
+
+# Create necessary directories and set permissions
+RUN mkdir -p /var/log/php /var/log/supervisor /var/www/html /tmp/templates && \
+    chmod 0775 /var/log/php /var/log/supervisor
+
+# Create entrypoint script
+COPY --chmod=755 <<'EOF' /usr/local/bin/docker-entrypoint.sh
+#!/bin/bash
+set -e
+
+# Set default values if not provided (OpenResty compatibility)
+USER_ID=${PUID:-82}
+GROUP_ID=${PGID:-82}
+USER_NAME=${USER_NAME:-www-data}
+GROUP_NAME=${GROUP_NAME:-www-data}
+
+# Create group if it doesn't exist
+if ! getent group "${GROUP_NAME}" >/dev/null 2>&1; then
+    if ! getent group "${GROUP_ID}" >/dev/null 2>&1; then
+        addgroup -g "${GROUP_ID}" "${GROUP_NAME}"
+    else
+        # Group ID exists but with different name, use existing group
+        EXISTING_GROUP=$(getent group "${GROUP_ID}" | cut -d: -f1)
+        GROUP_NAME="${EXISTING_GROUP}"
+    fi
+fi
+
+# Create user if it doesn't exist
+if ! getent passwd "${USER_NAME}" >/dev/null 2>&1; then
+    if ! getent passwd "${USER_ID}" >/dev/null 2>&1; then
+        adduser -D -u "${USER_ID}" -G "${GROUP_NAME}" -s /bin/bash "${USER_NAME}"
+    else
+        # User ID exists but with different name, use existing user
+        EXISTING_USER=$(getent passwd "${USER_ID}" | cut -d: -f1)
+        USER_NAME="${EXISTING_USER}"
+    fi
+fi
+
+# Process configuration templates
+envsubst '${USER_NAME} ${GROUP_NAME} ${USER_ID} ${GROUP_ID}' < /usr/local/etc/php-fpm.d/www.conf.template > /usr/local/etc/php-fpm.d/www.conf
+envsubst '${USER_NAME}' < /var/spool/cron/crontabs/root.template > /var/spool/cron/crontabs/root
+envsubst '${USER_NAME}' < /etc/supervisor.d/laravel.ini.template > /etc/supervisor.d/laravel.ini
+
+# Set proper permissions for cron
+chmod 600 /var/spool/cron/crontabs/root
+chown root:root /var/spool/cron/crontabs/root
+
+# Create log file for cron
+touch /var/log/cron.log
+
+# Ensure proper ownership of critical directories
+chown -R "${USER_ID}:${GROUP_ID}" /var/www /var/log/php
+find /var/www -type d -exec chmod 755 {} \; 2>/dev/null || true
+find /var/www -type f -exec chmod 644 {} \; 2>/dev/null || true
+
+# Set working directory
+cd /var/www/html
+
+# Execute the main command (PHP-FPM manages its own user switching)
+exec "$@"
+EOF
+
+# Remove the USER directive and fix entrypoint
+# WORKDIR /var/www/html
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["php-fpm"]
