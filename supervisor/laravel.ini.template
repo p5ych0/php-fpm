@@ -1,16 +1,21 @@
 [supervisord]
 nodaemon=true
+user=root
+
 [program:worker]
 process_name=%(program_name)s_%(process_num)02d
-command=/var/www/html/artisan queue:work --timeout=60 --tries=5
+command=/usr/local/bin/php /var/www/html/artisan queue:work --timeout=60 --tries=5
 autostart=true
 autorestart=true
 user=${USER_NAME}
 numprocs=%(ENV_NUMPROCS)s
 redirect_stderr=true
-stdout_logfile=/var/log/supervisor/supervisor.log
+stdout_logfile=/var/log/supervisor/worker.log
+
 [program:cron]
 command=/usr/sbin/crond -f
 autostart=true
 autorestart=true
+user=root
 redirect_stderr=true
+stdout_logfile=/var/log/supervisor/cron.log

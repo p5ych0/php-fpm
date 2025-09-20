@@ -117,7 +117,7 @@ FROM base AS final
 COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
-# Configure OPcache with dynamic user support
+# Configure OPcache with dynamic environment variable support
 RUN { \
         echo 'opcache.memory_consumption=192'; \
         echo 'opcache.interned_strings_buffer=16'; \
@@ -130,7 +130,7 @@ RUN { \
         echo 'opcache.enable_file_override=0'; \
         echo 'opcache.preload=${PHP_OPCACHE_PRELOAD}'; \
         echo 'opcache.preload_user=${USER_NAME}'; \
-    } > /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+    } > /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini.template
 
 # Copy configuration files
 COPY ./www.conf.template /usr/local/etc/php-fpm.d/www.conf.template
@@ -166,6 +166,12 @@ USER_ID=${PUID:-82}
 GROUP_ID=${PGID:-82}
 USER_NAME=${USER_NAME:-www-data}
 GROUP_NAME=${GROUP_NAME:-www-data}
+NUMPROCS=${NUMPROCS:-4}
+PHP_OPCACHE_PRELOAD=${PHP_OPCACHE_PRELOAD:-}
+PHP_OPCACHE_FREQ=${PHP_OPCACHE_FREQ:-600}
+
+# Export environment variables for supervisor
+export USER_ID GROUP_ID USER_NAME GROUP_NAME NUMPROCS PHP_OPCACHE_PRELOAD PHP_OPCACHE_FREQ
 
 # Create group if it doesn't exist
 if ! getent group "${GROUP_NAME}" >/dev/null 2>&1; then
@@ -193,6 +199,7 @@ fi
 envsubst '${USER_NAME} ${GROUP_NAME} ${USER_ID} ${GROUP_ID}' < /usr/local/etc/php-fpm.d/www.conf.template > /usr/local/etc/php-fpm.d/www.conf
 envsubst '${USER_NAME}' < /var/spool/cron/crontabs/root.template > /var/spool/cron/crontabs/root
 envsubst '${USER_NAME}' < /etc/supervisor.d/laravel.ini.template > /etc/supervisor.d/laravel.ini
+envsubst '${PHP_OPCACHE_PRELOAD} ${PHP_OPCACHE_FREQ} ${USER_NAME}' < /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini.template > /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 # Set proper permissions for cron
 chmod 600 /var/spool/cron/crontabs/root
@@ -203,18 +210,26 @@ touch /var/log/cron.log
 
 # Ensure proper ownership of critical directories
 chown -R "${USER_ID}:${GROUP_ID}" /var/www /var/log/php
+# Supervisor logs need to be accessible by root (supervisord) but readable by user
+chown -R root:root /var/log/supervisor
+chmod 755 /var/log/supervisor
 find /var/www -type d -exec chmod 755 {} \; 2>/dev/null || true
 find /var/www -type f -exec chmod 644 {} \; 2>/dev/null || true
 
 # Set working directory
 cd /var/www/html
 
-# Execute the main command (PHP-FPM manages its own user switching)
-exec "$@"
+# Execute the main command
+if [ "$1" = "supervisord" ]; then
+    # Run supervisor with the processed configuration (use -n for nodaemon)
+    exec /usr/bin/supervisord -n -c /etc/supervisor.d/laravel.ini
+else
+    # Default: run php-fpm (manages its own user switching)
+    exec "$@"
+fi
 EOF
 
-# Remove the USER directive and fix entrypoint
-# WORKDIR /var/www/html
+WORKDIR /var/www/html
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]

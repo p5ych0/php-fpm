@@ -12,9 +12,29 @@ services:
       - PGID=${GID:-82}
       - USER_NAME=${USER:-www-data}
       - GROUP_NAME=${GROUP:-www-data}
-      - ENV_NUMPROCS=4
       - PHP_OPCACHE_PRELOAD=/var/www/html/bootstrap/cache/opcache.php
+      - PHP_OPCACHE_FREQ=300
     restart: unless-stopped
+
+  # Alternative: PHP-FPM with Supervisor (for Laravel queue workers)
+  php-supervisor:
+    build: .
+    command: supervisord
+    volumes:
+      - ./app:/var/www/html
+      - ./storage/logs:/var/log/php
+      - ./storage/supervisor:/var/log/supervisor
+    environment:
+      - PUID=${UID:-82}
+      - PGID=${GID:-82}
+      - USER_NAME=${USER:-www-data}
+      - GROUP_NAME=${GROUP:-www-data}
+      - NUMPROCS=6
+      - PHP_OPCACHE_PRELOAD=/var/www/html/bootstrap/cache/opcache.php
+      - PHP_OPCACHE_FREQ=300
+    restart: unless-stopped
+    profiles:
+      - supervisor
 
   nginx:
     image: nginx:alpine
