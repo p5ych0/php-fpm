@@ -213,8 +213,6 @@ chown -R "${USER_ID}:${GROUP_ID}" /var/www /var/log/php
 # Supervisor logs need to be accessible by root (supervisord) but readable by user
 chown -R root:root /var/log/supervisor
 chmod 755 /var/log/supervisor
-find /var/www -type d -exec chmod 755 {} \; 2>/dev/null || true
-find /var/www -type f -exec chmod 644 {} \; 2>/dev/null || true
 
 # Set working directory
 cd /var/www/html
