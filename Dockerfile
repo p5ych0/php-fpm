@@ -22,6 +22,7 @@ RUN --mount=type=cache,target=/var/cache/apk \
         sed \
         openssl \
         imagemagick \
+        imagemagick-libs \
         mc \
         wget \
         net-tools \
@@ -69,6 +70,7 @@ RUN --mount=type=cache,target=/var/cache/apk \
         gmp-dev \
         libpng-dev \
         imagemagick-dev \
+        imagemagick-libs \
         postgresql-dev \
         oniguruma-dev \
         freetype-dev \
@@ -209,7 +211,7 @@ chown root:root /var/spool/cron/crontabs/root
 touch /var/log/cron.log
 
 # Ensure proper ownership of critical directories
-chown -R "${USER_ID}:${GROUP_ID}" /var/www /var/log/php
+chown -R "${USER_ID}:${GROUP_ID}" /var/log/php
 # Supervisor logs need to be accessible by root (supervisord) but readable by user
 chown -R root:root /var/log/supervisor
 chmod 755 /var/log/supervisor
