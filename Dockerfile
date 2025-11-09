@@ -213,8 +213,7 @@ touch /var/log/cron.log
 # Ensure proper ownership of critical directories
 chown -R "${USER_ID}:${GROUP_ID}" /var/log/php
 # Supervisor logs need to be accessible by root (supervisord) but readable by user
-chown -R root:root /var/log/supervisor
-chmod 755 /var/log/supervisor
+chown -R "${USER_ID}:${GROUP_ID}" /var/log/supervisor
 
 # Set working directory
 cd /var/www/html
