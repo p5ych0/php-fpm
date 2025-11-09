@@ -67,6 +67,19 @@ RESOLVED_UID=$(getent passwd "$USER_NAME" | cut -d: -f3)
 RESOLVED_GID=$(getent group "$GROUP_NAME" | cut -d: -f3)
 chown "$RESOLVED_UID":"$RESOLVED_GID" /var/log/php || true
 chown "$RESOLVED_UID":"$RESOLVED_GID" /var/www/html || true
+chown -R "$RESOLVED_UID":"$RESOLVED_GID" /var/log/supervisor 2>/dev/null || true
+chown "$RESOLVED_UID":"$RESOLVED_GID" /var/log/cron.log 2>/dev/null || true
+chmod 0664 /var/log/cron.log 2>/dev/null || true
+chmod 2775 /var/log/php 2>/dev/null || true
+chmod g+s /var/log/php 2>/dev/null || true
+chmod 2775 /var/log/supervisor 2>/dev/null || true
+chmod g+s /var/log/supervisor 2>/dev/null || true
+# Normalize permissions of existing files to be group-writable
+find /var/log/php -maxdepth 1 -type f -exec chmod 664 {} \; 2>/dev/null || true
+find /var/log/supervisor -maxdepth 1 -type f -exec chmod 664 {} \; 2>/dev/null || true
+
+# Ensure group-writable defaults for new files
+umask 0002
 
 # Apply supervisor settings dynamically if config exists
 if [ -f /etc/supervisor.d/laravel.ini ]; then
