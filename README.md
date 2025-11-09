@@ -96,3 +96,29 @@ The container will create or reuse the specified user/group at runtime and drop 
 ### OPcache preload via environment
 
 If `PHP_OPCACHE_PRELOAD` is set, an ini fragment is generated: `zz-opcache-env.ini` enabling preload and assigning `opcache.preload_user` to the runtime user. Adjust `PHP_OPCACHE_FREQ` to control `opcache.revalidate_freq`.
+
+### Optional Browscap (user agent capability database)
+
+Browscap can be enabled dynamically without baking it into the image. Set `BROWSCAP_ENABLE=1` to trigger download at container start; the entrypoint manages caching and refresh based on `BROWSCAP_TTL` (default 604800 seconds).
+
+Environment variables:
+
+* `BROWSCAP_ENABLE` (0/1, default 0) – turn on browscap management.
+* `BROWSCAP_VARIANT` (full|standard|lite, default standard) – selects upstream stream.
+* `BROWSCAP_SOURCE_URL` (optional) – override auto-generated URL.
+* `BROWSCAP_PATH` (default /usr/local/etc/php/browscap/browscap.ini) – target file.
+* `BROWSCAP_TTL` (default 604800) – max age before refresh.
+* `BROWSCAP_FORCE_REFRESH` (0/1) – ignore TTL and re-download.
+
+When enabled, an ini fragment `zz-browscap-env.ini` is written with `browscap=/path/to/file`. Use `get_browser()` in PHP (ensure `browscap` directive is set). Example test script:
+
+```php
+<?php
+var_dump(get_browser(null, true));
+```
+
+Minimal docker run example to enable browscap:
+
+```bash
+docker run --rm -e BROWSCAP_ENABLE=1 -v "$PWD":/var/www/html php-fpm:8.4-zts-alpine php -r 'echo json_encode(get_browser(null, true), JSON_PRETTY_PRINT), "\n";'
+```
