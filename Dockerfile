@@ -52,13 +52,17 @@ FROM php:8.4-zts-alpine
 
 ENV PHP_OPCACHE_PRELOAD=""
 ENV PHP_OPCACHE_FREQ=600
+ENV PUID=82
+ENV PGID=82
+ENV USER_NAME=www-data
+ENV GROUP_NAME=www-data
 
 # Install runtime dependencies
 RUN apk --update add --no-cache \
     bash bash-completion curl diffutils git grep gmp sed openssl \
     gettext imagemagick mc wget net-tools procps sudo supervisor \
     postgresql-libs libjpeg-turbo libpng libzip icu-libs freetype tar libuv \
-    shadow \
+    shadow su-exec \
     && rm -rf /var/cache/apk/*
 
 # Copy built extensions and binaries from builder
@@ -72,13 +76,11 @@ COPY php.ini /usr/local/etc/php/php.ini
 COPY supervisor/laravel.ini /etc/supervisor.d/laravel.ini
 COPY cron/root /var/spool/cron/crontabs/root
 
-# Setup directories and permissions
+# Setup directories and base permissions (ownership applied at runtime)
 RUN mkdir -p /var/log/php \
     && mkdir -p /var/log/supervisor \
     && mkdir -p /var/www/html \
-    && chown www-data:www-data /var/log/php \
     && chmod 0775 /var/log/php \
-    && chown www-data:www-data -R /var/www \
     && chmod 600 /var/spool/cron/crontabs/root \
     && touch /var/log/cron.log
 

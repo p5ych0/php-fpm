@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  php:
+    build:
+      context: .
+    container_name: php84-zts
+    working_dir: /var/www/html
+    environment:
+      # Override these with your host user/group to avoid permission issues
+      PUID: ${UID:-82}
+      PGID: ${GID:-82}
+      USER_NAME: ${USER:-www-data}
+      GROUP_NAME: ${GROUP:-www-data}
+    volumes:
+      - ./:/var/www/html
+    command: ["php", "-v"]
+
+  # Optional: run Supervisor (e.g., Laravel queue workers)
+  supervisor:
+    build:
+      context: .
+    command: ["supervisord"]
+    working_dir: /var/www/html
+    environment:
+      PUID: ${UID:-82}
+      PGID: ${GID:-82}
+      USER_NAME: ${USER:-www-data}
+      GROUP_NAME: ${GROUP:-www-data}
+      NUMPROCS: 4
+    volumes:
+      - ./:/var/www/html
+      - ./storage/supervisor:/var/log/supervisor
