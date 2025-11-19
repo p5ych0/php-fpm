@@ -87,8 +87,11 @@ RUN mkdir -p /var/log/php \
 # Add script to handle user creation
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod +x /usr/local/bin/healthcheck.sh
 
 WORKDIR /var/www/html
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php", "-a"]
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD ["/usr/local/bin/healthcheck.sh"]

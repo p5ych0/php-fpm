@@ -1,0 +1,59 @@
+version: "3.9"
+services:
+  app:
+    image: p5ych0/php-cli:8.4-zts
+    container_name: octane-app
+    working_dir: /var/www/html
+    environment:
+      PUID: ${UID:-1000}
+      PGID: ${GID:-1000}
+      USER_NAME: ${USER:-ck}
+      GROUP_NAME: ${GROUP:-ck}
+      NUMPROCS: 4
+      PHP_OPCACHE_PRELOAD: /var/www/html/preload.php
+      PHP_OPCACHE_FREQ: 300
+      BROWSCAP_ENABLE: 0
+      OCTANE_SERVER: swoole
+      OCTANE_MAX_REQUESTS: 500
+      OCTANE_WORKERS: 4
+      OCTANE_TASK_WORKERS: 2
+      TZ: UTC
+    volumes:
+      - ./:/var/www/html:rw
+      - ./logs:/var/log/php:rw
+      - ./logs:/var/log/supervisor:rw
+      - ./logs/cron.log:/var/log/cron.log:rw
+    ports:
+      - "8000:8000"
+    command: ["php", "artisan", "octane:start", "--server=swoole", "--host=0.0.0.0", "--port=8000", "--watch"]
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck.sh"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  supervisor:
+    image: p5ych0/php-cli:8.4-zts
+    container_name: supervisor-app
+    working_dir: /var/www/html
+    environment:
+      PUID: ${UID:-1000}
+      PGID: ${GID:-1000}
+      USER_NAME: ${USER:-ck}
+      GROUP_NAME: ${GROUP:-ck}
+      NUMPROCS: 4
+      TZ: UTC
+    volumes:
+      - ./:/var/www/html:rw
+      - ./logs:/var/log/php:rw
+      - ./logs:/var/log/supervisor:rw
+      - ./logs/cron.log:/var/log/cron.log:rw
+    command: ["supervisord", "-n"]
+    depends_on:
+      - app
+    restart: unless-stopped
+
+# Ensure host logs directory exists:
+#   mkdir -p logs && touch logs/cron.log
+# Make preload file optional: create /var/www/html/preload.php if needed.
