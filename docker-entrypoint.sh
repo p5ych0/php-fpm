@@ -16,12 +16,28 @@ set -e
 #   BROWSCAP_PATH (default /usr/local/etc/php/browscap/browscap.ini)
 #   BROWSCAP_TTL (seconds, default 604800 ~ 7 days)
 #   BROWSCAP_FORCE_REFRESH (0/1, default 0)
+#   REVERB_ENABLE (0/1, default 0)
+#   REVERB_PORT (default 8080)
+#   OCTANE_PORT (default 8000)
+#   AUTO_WORKERS (0/1, default 0) -> if 1 and NUMPROCS unset or <=0, sets NUMPROCS to CPU count
 
 PUID="${PUID:-${CUID:-82}}"
 PGID="${PGID:-${CGID:-82}}"
 USER_NAME="${USER_NAME:-${CUSER:-www-data}}"
 GROUP_NAME="${GROUP_NAME:-${CGROUP:-www-data}}"
-NUMPROCS="${NUMPROCS:-1}"
+NUMPROCS_RAW="${NUMPROCS:-}"
+REVERB_ENABLE="${REVERB_ENABLE:-0}"
+REVERB_PORT="${REVERB_PORT:-8080}"
+OCTANE_PORT="${OCTANE_PORT:-8000}"
+AUTO_WORKERS="${AUTO_WORKERS:-0}"
+if [ -z "$NUMPROCS_RAW" ]; then NUMPROCS_RAW=1; fi
+if [ "$AUTO_WORKERS" = "1" ]; then
+    if [ "$NUMPROCS_RAW" -le 0 ] 2>/dev/null || [ -z "$NUMPROCS_RAW" ]; then
+         CPU_COUNT=$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)
+         NUMPROCS_RAW="$CPU_COUNT"
+    fi
+fi
+NUMPROCS="$NUMPROCS_RAW"
 PHP_OPCACHE_PRELOAD="${PHP_OPCACHE_PRELOAD:-}"
 PHP_OPCACHE_FREQ="${PHP_OPCACHE_FREQ:-600}"
 BROWSCAP_ENABLE="${BROWSCAP_ENABLE:-0}"
@@ -86,6 +102,19 @@ if [ -f /etc/supervisor.d/laravel.ini ]; then
         # Ensure workers run as the resolved user and set numprocs from env
         sed -i -E "s/^user=.*/user=${USER_NAME}/" /etc/supervisor.d/laravel.ini || true
         sed -i -E "s/^numprocs=.*/numprocs=${NUMPROCS}/" /etc/supervisor.d/laravel.ini || true
+fi
+
+# Optionally generate reverb supervisor program config when enabled
+if [ "$REVERB_ENABLE" = "1" ]; then
+    cat > /etc/supervisor.d/reverb.ini <<EOF
+[program:reverb]
+command=php artisan reverb:start --host=0.0.0.0 --port=${REVERB_PORT}
+autostart=true
+autorestart=true
+user=${USER_NAME}
+redirect_stderr=true
+stdout_logfile=/var/log/supervisor/reverb.log
+EOF
 fi
 
 # Apply OPcache settings from environment (optional)
