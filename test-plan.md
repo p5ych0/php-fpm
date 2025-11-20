@@ -24,13 +24,13 @@ Ensure the built image supports a real Laravel 12 application using:
 | Reverb Server | `reverb:start` | Process starts; port listens (default 8080/REVERB_PORT) |
 | Redis Ping | `/redis-ping` route | Returns JSON `{"pong":"PONG"}` |
 | Queue Dispatch | `/queue-dispatch` route & worker | Job logged in `storage/logs/laravel.log` |
-| WebSocket Handshake | `curl` upgrade request | HTTP 101 Switching Protocols |
+| WebSocket Handshake | `curl` upgrade request | HTTP 101 with real Reverb credentials; otherwise deterministic HTTP 400 "Application does not exist" when using placeholder keys (acceptable smoke test) |
 | Permissions | Write to /var/log/php & /storage/logs | Group-writable; no permission errors |
 | Healthcheck | HTTP probe `curl 127.0.0.1:$PORT/health` | HTTP 200, body includes `{"ok":true,"checks":{"redis":{"status":"ok"},…}}` |
 
 ## Steps
 
-1. Bootstrap Laravel project in `laravel-app/` directory mounted to `/var/www/html` in container.
+1. Bootstrap Laravel project in `laravel-app/` directory mounted to `/var/www/html` in container. **Do not override the image entrypoint when running composer/artisan**—it prepares `/var/log/php` symlinks and runtime permissions before your command executes.
 2. Install Octane & Reverb packages via composer, run respective install commands.
 3. Add/verify helper routes in `routes/web.php` (parallel test + `/health` JSON endpoint with Redis/queue/storage probes and optional DB check).
 4. Start Octane (Swoole) server and curl both `/` and `/parallel-test`.
@@ -41,6 +41,15 @@ Ensure the built image supports a real Laravel 12 application using:
 9. Validate the `/health` endpoint inside the Octane container with the same curl command Compose uses and confirm each `checks.*.status` is `ok` (or `skipped` for disabled probes).
 10. Inspect ownership/permissions of generated files and logs.
 11. Summarize results.
+
+## Known Pitfalls & Workarounds
+
+- **Let the entrypoint run for every `docker run … composer|php artisan …` call.** Using `--entrypoint ""` skips the init logic that sets up `/var/log/php` and `storage/logs` symlinks, which leaves broken links on the host and causes queue/log writes to fail. Stick with `docker run --rm p5ych0/php-cli:8.4-zts …` (or the build tag you are validating) so the entrypoint finishes first.
+- **Nuke and recreate `laravel-app/` before new installs.** The entrypoint lays down symlinks relative to `/var/www/html`; reusing a partially created app (especially after a failed composer run) leaves root-owned files and stale symlinks. Use `rm -rf laravel-app && mkdir -p laravel-app` prior to `composer create-project`.
+- **Run composer inside the container and fix ownership once.** After create-project and package installs, run `chown -R $(id -u):$(id -g) laravel-app` so local edits/IDE tooling can modify the tree without sudo.
+- **Queue/Redis dependencies must be up before hitting `/queue-dispatch`.** The route immediately attempts to push a Redis-backed job and expect a running queue worker (e.g., the `queue-worker` service). Hitting it without Redis or the worker yields a 500 and clutters logs.
+- **Healthcheck database probe is optional.** Set `HEALTHCHECK_DATABASE=false` (default) whenever no DB container is available so the `/health` endpoint reports the DB check as `skipped` instead of `failed`.
+- **Reverb smoke test expectations.** With placeholder `REVERB_APP_ID/KEY/SECRET`, the WebSocket probe returns `HTTP/1.1 400 Application does not exist`. Treat this as success (it proves the server is listening); only expect `101 Switching Protocols` once real credentials and channel/app IDs are configured.
 
 ## Parallel Test Route Sample (Concept)
 
