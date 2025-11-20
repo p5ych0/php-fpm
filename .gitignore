@@ -1,0 +1,24 @@
+# Local Laravel test project (generated during validation)
+laravel-app/
+
+# Runtime logs produced by containers
+logs/
+
+# Common dependency/asset directories
+vendor/
+node_modules/
+
+# Local environment files
+.env
+.env.*
+
+# IDE/project metadata
+.vscode/
+.idea/
+.DS_Store
+
+# Miscellaneous log fragments
+*.log
+
+# Optional Compose overrides
+docker-compose.override.yml

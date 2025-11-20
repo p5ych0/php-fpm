@@ -26,7 +26,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         bcmath calendar intl exif gmp gettext \
         mbstring pcntl pgsql pdo_pgsql pdo_mysql zip \
         gd opcache soap sockets \
-    && pecl install -o -f igbinary psr ds raphf mongodb swoole uv parallel \
+    && pecl install -o -f igbinary ds raphf mongodb swoole uv parallel \
     && cd /tmp \
     && pecl download redis \
     && tar xzf redis-*.tgz \
@@ -35,7 +35,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && ./configure --enable-redis-igbinary \
     && make -j$(nproc) \
     && make install \
-    && docker-php-ext-enable imagick igbinary mongodb raphf redis psr ds swoole uv parallel \
+    && docker-php-ext-enable imagick igbinary mongodb raphf redis ds swoole uv parallel \
     && rm -rf /tmp/* /var/cache/apk/* \
     && apk del .build-deps
 
@@ -74,6 +74,7 @@ COPY --from=builder /usr/local/bin/phpunit /usr/local/bin/phpunit
 # Copy application configs
 COPY php.ini /usr/local/etc/php/php.ini
 COPY supervisor/laravel.ini /etc/supervisor.d/laravel.ini
+COPY supervisor/queue-worker.ini /etc/supervisor.d/queue-worker.ini
 COPY cron/root /var/spool/cron/crontabs/root
 
 # Setup directories and base permissions (ownership applied at runtime)
@@ -87,11 +88,8 @@ RUN mkdir -p /var/log/php \
 # Add script to handle user creation
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-COPY healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/healthcheck.sh
 
 WORKDIR /var/www/html
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php", "-a"]
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD ["/usr/local/bin/healthcheck.sh"]

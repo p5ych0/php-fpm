@@ -3,17 +3,16 @@ set -e
 
 # Runtime user/group management (aligned with v7.4-fpm style, simplified).
 # Env vars:
-#   PUID (default 82)         | fallback: CUID
-#   PGID (default 82)         | fallback: CGID
-#   USER_NAME (default www-data) | fallback: CUSER
-#   GROUP_NAME (default www-data) | fallback: CGROUP
+#   PUID (provided via container env)
+#   PGID (provided via container env)
+#   USER_NAME (provided via container env)
+#   GROUP_NAME (provided via container env)
 #   NUMPROCS (default 1)
 #   PHP_OPCACHE_PRELOAD (optional)
 #   PHP_OPCACHE_FREQ (default 600)
 #   BROWSCAP_ENABLE (0/1, default 0)
 #   BROWSCAP_VARIANT (full|standard|lite, default standard)
 #   BROWSCAP_SOURCE_URL (override URL, optional)
-#   BROWSCAP_PATH (default /usr/local/etc/php/browscap/browscap.ini)
 #   BROWSCAP_TTL (seconds, default 604800 ~ 7 days)
 #   BROWSCAP_FORCE_REFRESH (0/1, default 0)
 #   REVERB_ENABLE (0/1, default 0)
@@ -21,10 +20,10 @@ set -e
 #   OCTANE_PORT (default 8000)
 #   AUTO_WORKERS (0/1, default 0) -> if 1 and NUMPROCS unset or <=0, sets NUMPROCS to CPU count
 
-PUID="${PUID:-${CUID:-82}}"
-PGID="${PGID:-${CGID:-82}}"
-USER_NAME="${USER_NAME:-${CUSER:-www-data}}"
-GROUP_NAME="${GROUP_NAME:-${CGROUP:-www-data}}"
+: "${PUID:?PUID env variable must be set}"
+: "${PGID:?PGID env variable must be set}"
+: "${USER_NAME:?USER_NAME env variable must be set}"
+: "${GROUP_NAME:?GROUP_NAME env variable must be set}"
 NUMPROCS_RAW="${NUMPROCS:-}"
 REVERB_ENABLE="${REVERB_ENABLE:-0}"
 REVERB_PORT="${REVERB_PORT:-8080}"
@@ -43,9 +42,13 @@ PHP_OPCACHE_FREQ="${PHP_OPCACHE_FREQ:-600}"
 BROWSCAP_ENABLE="${BROWSCAP_ENABLE:-0}"
 BROWSCAP_VARIANT="${BROWSCAP_VARIANT:-standard}"
 BROWSCAP_SOURCE_URL="${BROWSCAP_SOURCE_URL:-}"
-BROWSCAP_PATH="${BROWSCAP_PATH:-/usr/local/etc/php/browscap/browscap.ini}"
+BROWSCAP_PATH="/var/www/html/storage/browscap/browscap.ini"
 BROWSCAP_TTL="${BROWSCAP_TTL:-604800}"
 BROWSCAP_FORCE_REFRESH="${BROWSCAP_FORCE_REFRESH:-0}"
+LOG_ROOT="/var/www/html/storage/logs"
+PHP_LOG_DIR="${LOG_ROOT}/php"
+SUPERVISOR_LOG_DIR="${LOG_ROOT}/supervisor"
+CRON_LOG_FILE="${LOG_ROOT}/cron.log"
 
 # Ensure numeric values
 case "$PUID" in (*[!0-9]*|'') PUID=82 ;; esac
@@ -78,9 +81,29 @@ resolve_user() {
 resolve_group
 resolve_user
 
+CRON_FILE="/var/spool/cron/crontabs/root"
+if [ -f "$CRON_FILE" ]; then
+    sed -i \
+        -e "s/__CRON_USER__/${USER_NAME}/g" \
+        -e "s/__CRON_GROUP__/${GROUP_NAME}/g" \
+        "$CRON_FILE" 2>/dev/null || true
+fi
+
+# Centralize logs within Laravel storage directory
+mkdir -p "$PHP_LOG_DIR" "$SUPERVISOR_LOG_DIR"
+touch "$CRON_LOG_FILE"
+rm -rf /var/log/php
+rm -rf /var/log/supervisor
+rm -f /var/log/cron.log
+ln -s "$PHP_LOG_DIR" /var/log/php
+ln -s "$SUPERVISOR_LOG_DIR" /var/log/supervisor
+ln -s "$CRON_LOG_FILE" /var/log/cron.log
+
 # Adjust ownership of writable locations to the resolved uid/gid
 RESOLVED_UID=$(getent passwd "$USER_NAME" | cut -d: -f3)
 RESOLVED_GID=$(getent group "$GROUP_NAME" | cut -d: -f3)
+chown -R "$RESOLVED_UID":"$RESOLVED_GID" "$PHP_LOG_DIR" "$SUPERVISOR_LOG_DIR" 2>/dev/null || true
+chown "$RESOLVED_UID":"$RESOLVED_GID" "$CRON_LOG_FILE" 2>/dev/null || true
 chown "$RESOLVED_UID":"$RESOLVED_GID" /var/log/php || true
 chown "$RESOLVED_UID":"$RESOLVED_GID" /var/www/html || true
 chown -R "$RESOLVED_UID":"$RESOLVED_GID" /var/log/supervisor 2>/dev/null || true
@@ -102,6 +125,13 @@ if [ -f /etc/supervisor.d/laravel.ini ]; then
         # Ensure workers run as the resolved user and set numprocs from env
         sed -i -E "s/^user=.*/user=${USER_NAME}/" /etc/supervisor.d/laravel.ini || true
         sed -i -E "s/^numprocs=.*/numprocs=${NUMPROCS}/" /etc/supervisor.d/laravel.ini || true
+    # Remove any stale environment= lines referencing undefined vars
+    sed -i -E "/^environment=/d" /etc/supervisor.d/laravel.ini || true
+fi
+
+# Also adjust queue worker (if present) to run under resolved user
+if [ -f /etc/supervisor.d/queue-worker.ini ]; then
+    sed -i -E "s/^user=.*/user=${USER_NAME}/" /etc/supervisor.d/queue-worker.ini || true
 fi
 
 # Optionally generate reverb supervisor program config when enabled

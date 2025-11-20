@@ -97,6 +97,23 @@ The container will create or reuse the specified user/group at runtime and drop 
 
 If `PHP_OPCACHE_PRELOAD` is set, an ini fragment is generated: `zz-opcache-env.ini` enabling preload and assigning `opcache.preload_user` to the runtime user. Adjust `PHP_OPCACHE_FREQ` to control `opcache.revalidate_freq`.
 
+## HTTP healthcheck
+
+The example Laravel app ships with a `/health` route that exercises key dependencies and reports structured results:
+
+* `redis`: Confirms the configured Redis connection responds to `PING`.
+* `queue`: Reuses the Redis queue connection (if the default driver is `redis`). Other drivers are reported as `skipped`.
+* `storage_logs`: Verifies `storage/logs` exists and is writable by the runtime user.
+* `database`: Optional check (disabled by default). Set `HEALTHCHECK_DATABASE=1` in the Octane container to enable a simple `SELECT 1` probe against the configured default connection. When disabled, the response marks it as `skipped` so health does not fail in environments without a database.
+
+The overall HTTP status is `200` when all non-skipped checks pass; otherwise it returns `503` with the failing details. All Compose files use a `CMD-SHELL` probe that runs:
+
+```sh
+curl -fsS --max-time 5 http://127.0.0.1:${OCTANE_PORT:-8000}/health
+```
+
+Feel free to extend the JSON payload with domain-specific checks (cache stores, downstream APIs, etc.)—the `curl` command only cares that the endpoint responds successfully.
+
 ### Optional Browscap (user agent capability database)
 
 Browscap can be enabled dynamically without baking it into the image. Set `BROWSCAP_ENABLE=1` to trigger download at container start; the entrypoint manages caching and refresh based on `BROWSCAP_TTL` (default 604800 seconds).
