@@ -56,6 +56,7 @@ ENV PUID=82
 ENV PGID=82
 ENV USER_NAME=www-data
 ENV GROUP_NAME=www-data
+ENV NODE_PATH=/usr/local/lib/node_modules:/usr/local/lib/node_modules/chokidar-cli/node_modules
 
 # Install runtime dependencies
 RUN apk --update add --no-cache \
