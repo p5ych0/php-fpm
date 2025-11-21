@@ -62,7 +62,9 @@ RUN apk --update add --no-cache \
     bash bash-completion curl diffutils git grep gmp sed openssl \
     gettext imagemagick mc wget net-tools procps sudo supervisor \
     postgresql-libs libjpeg-turbo libpng libzip icu-libs freetype tar libuv \
-    shadow su-exec \
+    shadow su-exec nodejs npm \
+    && npm install -g chokidar-cli \
+    && npm cache clean --force \
     && rm -rf /var/cache/apk/*
 
 # Copy built extensions and binaries from builder
