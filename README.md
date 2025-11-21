@@ -35,7 +35,6 @@ Contains the following extensions:
 * pgsql
 * Phar
 * posix
-* psr
 * raphf
 * redis
 * Reflection
