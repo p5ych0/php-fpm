@@ -79,6 +79,7 @@ COPY php.ini /usr/local/etc/php/php.ini
 COPY supervisor/laravel.ini /etc/supervisor.d/laravel.ini
 COPY supervisor/queue-worker.ini /etc/supervisor.d/queue-worker.ini
 COPY cron/root /var/spool/cron/crontabs/root
+COPY scripts/octane-start.sh /usr/local/bin/octane-start.sh
 
 # Setup directories and base permissions (ownership applied at runtime)
 RUN mkdir -p /var/log/php \
@@ -86,7 +87,8 @@ RUN mkdir -p /var/log/php \
     && mkdir -p /var/www/html \
     && chmod 0775 /var/log/php \
     && chmod 600 /var/spool/cron/crontabs/root \
-    && touch /var/log/cron.log
+    && touch /var/log/cron.log \
+    && chmod +x /usr/local/bin/octane-start.sh
 
 # Add script to handle user creation
 COPY docker-entrypoint.sh /usr/local/bin/
