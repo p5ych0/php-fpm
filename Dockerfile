@@ -10,7 +10,7 @@ RUN apk add --no-cache --virtual .build-deps \
     linux-headers gnupg libxslt-dev gd-dev geoip-dev gettext-dev \
     perl-dev unzip zip g++ autoconf automake libzip-dev icu-dev \
     gmp-dev libpng-dev imagemagick-dev postgresql-dev oniguruma-dev \
-    freetype-dev libjpeg-turbo-dev libxml2-dev libuv-dev
+    freetype-dev libjpeg-turbo-dev libxml2-dev libuv-dev librdkafka-dev
 
 # Build and install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -23,10 +23,10 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && make \
     && make install \
     && docker-php-ext-install \
-        bcmath calendar intl exif gmp gettext \
-        mbstring pcntl pgsql pdo_pgsql pdo_mysql zip \
-        gd opcache soap sockets \
-    && pecl install -o -f igbinary ds raphf mongodb swoole uv parallel \
+    bcmath calendar intl exif gmp gettext \
+    mbstring pcntl pgsql pdo_pgsql pdo_mysql zip \
+    gd opcache soap sockets \
+    && pecl install -o -f igbinary ds raphf mongodb swoole uv parallel rdkafka \
     && cd /tmp \
     && pecl download redis \
     && tar xzf redis-*.tgz \
@@ -35,7 +35,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && ./configure --enable-redis-igbinary \
     && make -j$(nproc) \
     && make install \
-    && docker-php-ext-enable imagick igbinary mongodb raphf redis ds swoole uv parallel \
+    && docker-php-ext-enable imagick igbinary mongodb raphf redis ds swoole uv parallel rdkafka \
     && rm -rf /tmp/* /var/cache/apk/* \
     && apk del .build-deps
 
@@ -63,7 +63,7 @@ RUN apk --update add --no-cache \
     bash bash-completion curl diffutils git grep gmp sed openssl \
     gettext imagemagick mc wget net-tools procps sudo supervisor \
     postgresql-libs libjpeg-turbo libpng libzip icu-libs freetype tar libuv \
-    shadow su-exec nodejs npm \
+    shadow su-exec nodejs npm librdkafka \
     && npm install -g chokidar-cli \
     && npm cache clean --force \
     && rm -rf /var/cache/apk/*

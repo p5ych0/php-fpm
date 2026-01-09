@@ -36,6 +36,7 @@ Contains the following extensions:
 * Phar
 * posix
 * raphf
+* rdkafka
 * redis
 * Reflection
 * session
