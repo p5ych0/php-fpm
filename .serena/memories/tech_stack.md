@@ -5,7 +5,8 @@
 - PECL: igbinary ds raphf mongodb swoole uv rdkafka unpinned (latest at build time); `parallel` PINNED — see below.
 - ds is 2.x (Seq/Map/Set/Heap/Pair + Key interface; Vector/Deque/Stack/Queue/PriorityQueue/Hashable removed). Downstream apps don't use Ds directly; symfony/uid auto-switches to `Ds\Key`. Changelog: https://github.com/php-ds/ext-ds/blob/master/CHANGELOG.md
 - redis: built manually from `pecl download` with `--enable-redis-igbinary` (not `pecl install`).
-- imagick: built from GitHub `develop` tarball (unpinned; reports `@PACKAGE_VERSION@` as its version — expected, not a failure).
+- imagick: from PECL (3.8.1+; the GitHub `develop` branch is stale since 2025-03 and does not compile on PHP 8.5).
+- `php.ini` sets `opcache.enable_cli=1`: Octane/Horizon/scheduler are CLI SAPI; without it OPcache and PHP_OPCACHE_PRELOAD are silently inactive in workers (was the case until 2026-09-28).
 - Runtime-only apk deps in final stage: ghostscript (imagick PDF read), imagemagick, librdkafka, libuv, icu-libs, postgresql-libs, nodejs/npm (+ global chokidar-cli for `octane --watch`), supervisor, su-exec, shadow.
 - ICU data is English-only (Alpine `icu-data-en`): non-en locales in intl silently fall back to en. Pre-existing, not a regression.
 - Tooling baked in: composer (latest installer), phpunit.phar (latest).

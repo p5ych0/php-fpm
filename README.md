@@ -95,7 +95,7 @@ The container will create or reuse the specified user/group at runtime and drop 
 
 ### OPcache preload via environment
 
-If `PHP_OPCACHE_PRELOAD` is set, an ini fragment is generated: `zz-opcache-env.ini` enabling preload and assigning `opcache.preload_user` to the runtime user. Adjust `PHP_OPCACHE_FREQ` to control `opcache.revalidate_freq`.
+`php.ini` sets `opcache.enable_cli=1` so OPcache is active in Octane, Horizon and scheduler workers (all CLI SAPI). If `PHP_OPCACHE_PRELOAD` is set, an ini fragment is generated: `zz-opcache-env.ini` enabling preload and assigning `opcache.preload_user` to the runtime user. Adjust `PHP_OPCACHE_FREQ` to control `opcache.revalidate_freq`.
 
 ## HTTP healthcheck
 

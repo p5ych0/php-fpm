@@ -18,18 +18,11 @@ RUN apk add --no-cache --virtual .build-deps \
 # only while parallel loads before swoole). https://github.com/swoole/swoole-src/issues/6262
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure pgsql -with-pgsql=/usr/include/ \
-    && mkdir -p /usr/src/php/ext/imagick \
-    && curl -fsSL https://github.com/Imagick/imagick/archive/develop.tar.gz | tar xvz -C "/usr/src/php/ext/imagick" --strip 1 \
-    && cd /usr/src/php/ext/imagick \
-    && phpize \
-    && ./configure \
-    && make \
-    && make install \
     && docker-php-ext-install \
     bcmath calendar intl exif gmp gettext \
     mbstring pcntl pgsql pdo_pgsql pdo_mysql zip \
     gd opcache soap sockets \
-    && pecl install -o -f igbinary ds raphf mongodb swoole uv parallel-1.2.13 rdkafka \
+    && pecl install -o -f imagick igbinary ds raphf mongodb swoole uv parallel-1.2.13 rdkafka \
     && cd /tmp \
     && pecl download redis \
     && tar xzf redis-*.tgz \
