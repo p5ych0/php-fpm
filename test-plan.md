@@ -44,7 +44,7 @@ Ensure the built image supports a real Laravel 12 application using:
 
 ## Known Pitfalls & Workarounds
 
-- **Let the entrypoint run for every `docker run … composer|php artisan …` call.** Using `--entrypoint ""` skips the init logic that sets up `/var/log/php` and `storage/logs` symlinks, which leaves broken links on the host and causes queue/log writes to fail. Stick with `docker run --rm p5ych0/php-cli:8.4-zts …` (or the build tag you are validating) so the entrypoint finishes first.
+- **Let the entrypoint run for every `docker run … composer|php artisan …` call.** Using `--entrypoint ""` skips the init logic that sets up `/var/log/php` and `storage/logs` symlinks, which leaves broken links on the host and causes queue/log writes to fail. Stick with `docker run --rm p5ych0/php-cli:8.5-zts-alpine …` (or the build tag you are validating) so the entrypoint finishes first.
 - **Nuke and recreate `laravel-app/` before new installs.** The entrypoint lays down symlinks relative to `/var/www/html`; reusing a partially created app (especially after a failed composer run) leaves root-owned files and stale symlinks. Use `rm -rf laravel-app && mkdir -p laravel-app` prior to `composer create-project`.
 - **Run composer inside the container and fix ownership once.** After create-project and package installs, run `chown -R $(id -u):$(id -g) laravel-app` so local edits/IDE tooling can modify the tree without sudo.
 - **Queue/Redis dependencies must be up before hitting `/queue-dispatch`.** The route immediately attempts to push a Redis-backed job and expect a running queue worker (e.g., the `queue-worker` service). Hitting it without Redis or the worker yields a 500 and clutters logs.
@@ -72,7 +72,7 @@ Route::get('/parallel-test', function() {
 
 ## Commands Cheat Sheet
 
-Container image reference: `php-fpm:8.4-zts-octane-test`
+Container image reference: `php-fpm:8.5-zts-octane-test`
 
 ```bash
 # 1. Create target directory
@@ -80,17 +80,17 @@ mkdir -p laravel-app
 
 # 2. Composer create-project (host user mapping)
 docker run --rm -e PUID=$(id -u) -e PGID=$(id -g) -e USER_NAME=$USER -e GROUP_NAME=$USER \
-  -v "$PWD/laravel-app":/var/www/html php-fpm:8.4-zts-octane-test \
+  -v "$PWD/laravel-app":/var/www/html php-fpm:8.5-zts-octane-test \
   composer create-project laravel/laravel .
 
 # 3. Install Octane & Reverb
-docker run --rm -v "$PWD/laravel-app":/var/www/html php-fpm:8.4-zts-octane-test \
+docker run --rm -v "$PWD/laravel-app":/var/www/html php-fpm:8.5-zts-octane-test \
   composer require laravel/octane laravel/reverb
 
-docker run --rm -v "$PWD/laravel-app":/var/www/html php-fpm:8.4-zts-octane-test \
+docker run --rm -v "$PWD/laravel-app":/var/www/html php-fpm:8.5-zts-octane-test \
   php artisan octane:install --server=swoole
 
-docker run --rm -v "$PWD/laravel-app":/var/www/html php-fpm:8.4-zts-octane-test \
+docker run --rm -v "$PWD/laravel-app":/var/www/html php-fpm:8.5-zts-octane-test \
   php artisan reverb:install
 
 # 4. Add parallel route
@@ -98,7 +98,7 @@ docker run --rm -v "$PWD/laravel-app":/var/www/html php-fpm:8.4-zts-octane-test 
 
 # 5. Start Octane server (foreground test)
 docker run --rm -p 8000:8000 -e PUID=$(id -u) -e PGID=$(id -g) -e USER_NAME=$USER -e GROUP_NAME=$USER \
-  -v "$PWD/laravel-app":/var/www/html php-fpm:8.4-zts-octane-test \
+  -v "$PWD/laravel-app":/var/www/html php-fpm:8.5-zts-octane-test \
   php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000 --workers=2 &
 
 # 6. Curl test routes (after small delay)
@@ -121,7 +121,7 @@ docker compose exec octane \
 
 # Reverb server (smoke)
 docker run --rm -p 8080:8080 -e REVERB_ENABLE=1 -e REVERB_PORT=8080 -v "$PWD/laravel-app":/var/www/html \
-  php-fpm:8.4-zts-octane-test php artisan reverb:start --host=0.0.0.0 --port=8080 &
+  php-fpm:8.5-zts-octane-test php artisan reverb:start --host=0.0.0.0 --port=8080 &
 
 # Permissions audit
 ls -ld laravel-app/storage/logs

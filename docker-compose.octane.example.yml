@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   app:
-    image: p5ych0/php-cli:8.4-zts
+    image: p5ych0/php-cli:8.5-zts-alpine
     container_name: octane-app
     working_dir: /var/www/html
     environment:
@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
 
   supervisor:
-    image: p5ych0/php-cli:8.4-zts
+    image: p5ych0/php-cli:8.5-zts-alpine
     container_name: supervisor-app
     working_dir: /var/www/html
     environment:

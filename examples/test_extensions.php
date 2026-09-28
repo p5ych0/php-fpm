@@ -1,6 +1,6 @@
 <?php
 /**
- * Comprehensive extension functionality test for PHP 8.4 ZTS Alpine
+ * Comprehensive extension functionality test for PHP 8.5 ZTS Alpine
  * Tests: igbinary, imagick, redis, mongodb, parallel, uv, ds, psr, swoole, gd, etc.
  */
 

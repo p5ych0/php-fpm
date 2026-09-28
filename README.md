@@ -123,14 +123,14 @@ rm -rf laravel-app && mkdir -p laravel-app
 
 # Always let the image entrypoint run – do NOT pass --entrypoint ""
 docker run --rm -e PUID=$(id -u) -e PGID=$(id -g) -e USER_NAME=$USER -e GROUP_NAME=$USER \
-  -v "$PWD/laravel-app":/var/www/html p5ych0/php-cli:8.4-zts \
+  -v "$PWD/laravel-app":/var/www/html p5ych0/php-cli:8.5-zts-alpine \
   composer create-project laravel/laravel .
 
 # Install Octane/Reverb and publish assets (entrypoint still enabled)
-docker run --rm -v "$PWD/laravel-app":/var/www/html p5ych0/php-cli:8.4-zts \
+docker run --rm -v "$PWD/laravel-app":/var/www/html p5ych0/php-cli:8.5-zts-alpine \
   composer require laravel/octane laravel/reverb
 
-docker run --rm -v "$PWD/laravel-app":/var/www/html p5ych0/php-cli:8.4-zts \
+docker run --rm -v "$PWD/laravel-app":/var/www/html p5ych0/php-cli:8.5-zts-alpine \
   php artisan octane:install --server=swoole
 
 # Configure env (see docker/octane.env) and bring the stack up
@@ -186,5 +186,5 @@ var_dump(get_browser(null, true));
 Minimal docker run example to enable browscap:
 
 ```bash
-docker run --rm -e BROWSCAP_ENABLE=1 -v "$PWD":/var/www/html php-fpm:8.4-zts-alpine php -r 'echo json_encode(get_browser(null, true), JSON_PRETTY_PRINT), "\n";'
+docker run --rm -e BROWSCAP_ENABLE=1 -v "$PWD":/var/www/html php-fpm:8.5-zts-alpine php -r 'echo json_encode(get_browser(null, true), JSON_PRETTY_PRINT), "\n";'
 ```

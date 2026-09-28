@@ -176,8 +176,6 @@ try {
     echo "   Image created: 100x100\n";
     echo "   PNG output size: " . strlen($imageData) . " bytes\n";
     echo "   ✓ PASS\n\n";
-    
-    imagedestroy($img);
 } catch (Exception $e) {
     echo "   ✗ FAIL: " . $e->getMessage() . "\n\n";
 }

@@ -3,7 +3,7 @@
 Docker image build repo for PHP runtimes used as base images by other (Laravel) projects. No app code of its own.
 
 ## Branch model
-- One long-lived branch per image variant: `v8.4-zts-alpine` (active), `v7.4-fpm`, `v7.3-fpm`, `v5.6-fpm`, `v8.0-cli`, `browscap`, `cli`.
+- One long-lived branch per image variant: `v8.5-zts-alpine` (this), `v8.4-zts-alpine` (still maintained; backport shared fixes there), `v7.4-fpm`, `v7.3-fpm`, `v5.6-fpm`, `v8.0-cli`, `browscap`, `cli`.
 - `master` is stale (2021); do NOT branch from or PR into it for variant work. Commit on the variant branch.
 - Repo/dir name says "fpm", but the v8.4 branch image is CLI + ZTS (no php-fpm binary, no FPM pool). `www.conf`, `getcomposer.sh` are legacy leftovers not used by the Dockerfile.
 

@@ -1,5 +1,5 @@
 # Build stage
-FROM php:8.4-zts-alpine AS builder
+FROM php:8.5-zts-alpine AS builder
 
 ENV PHP_OPCACHE_PRELOAD=""
 ENV PHP_OPCACHE_FREQ=600
@@ -12,7 +12,7 @@ RUN apk add --no-cache --virtual .build-deps \
     gmp-dev libpng-dev imagemagick-dev postgresql-dev oniguruma-dev \
     freetype-dev libjpeg-turbo-dev libxml2-dev libuv-dev librdkafka-dev
 
-# Build and install PHP extensions
+# Build and install PHP extensions (OPcache is compiled into PHP >= 8.5, not installed here)
 # Pin: parallel >=1.2.14 segfaults with swoole loaded (swoole RINIT derefs a null
 # thread buffer in parallel threads; <=1.2.13 recovered via its SIGSEGV handler,
 # only while parallel loads before swoole). https://github.com/swoole/swoole-src/issues/6262
@@ -21,7 +21,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
     bcmath calendar intl exif gmp gettext \
     mbstring pcntl pgsql pdo_pgsql pdo_mysql zip \
-    gd opcache soap sockets \
+    gd soap sockets \
     && pecl install -o -f imagick igbinary ds raphf mongodb swoole uv parallel-1.2.13 rdkafka \
     && cd /tmp \
     && pecl download redis \
@@ -44,7 +44,7 @@ ADD https://phar.phpunit.de/phpunit.phar /usr/local/bin/phpunit
 RUN chmod +x /usr/local/bin/phpunit
 
 # Final stage
-FROM php:8.4-zts-alpine
+FROM php:8.5-zts-alpine
 
 ENV PHP_OPCACHE_PRELOAD=""
 ENV PHP_OPCACHE_FREQ=600

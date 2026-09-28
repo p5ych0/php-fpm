@@ -1,7 +1,8 @@
-# Tech stack (v8.4-zts-alpine)
+# Tech stack (v8.5-zts-alpine)
 
-- Base: official `php:8.4-zts-alpine` (ZTS required by `parallel`). Tag floats: patch version AND default Alpine release change (e.g. 8.4.20/Alpine 3.23 -> 8.4.26/Alpine 3.24). Check both when rebuilding.
-- Core exts via `docker-php-ext-install`: bcmath calendar intl exif gmp gettext mbstring pcntl pgsql pdo_pgsql pdo_mysql zip gd(freetype+jpeg) opcache soap sockets.
+- Base: official `php:8.5-zts-alpine` (ZTS required by `parallel`). Tag floats: patch version AND default Alpine release change. Check both when rebuilding.
+- Core exts via `docker-php-ext-install`: bcmath calendar intl exif gmp gettext mbstring pcntl pgsql pdo_pgsql pdo_mysql zip gd(freetype+jpeg) soap sockets. OPcache is compiled into PHP >= 8.5 — do NOT list it in ext-install (`make install-modules` fails: no modules/*).
+- PHP 8.5 adds built-in `uri` and `lexbor` exts (65 modules vs 63 on 8.4). Removed `ext/standard/php_smart_string.h` (why imagick `develop` breaks).
 - PECL: igbinary ds raphf mongodb swoole uv rdkafka unpinned (latest at build time); `parallel` PINNED — see below.
 - ds is 2.x (Seq/Map/Set/Heap/Pair + Key interface; Vector/Deque/Stack/Queue/PriorityQueue/Hashable removed). Downstream apps don't use Ds directly; symfony/uid auto-switches to `Ds\Key`. Changelog: https://github.com/php-ds/ext-ds/blob/master/CHANGELOG.md
 - redis: built manually from `pecl download` with `--enable-redis-igbinary` (not `pecl install`).
