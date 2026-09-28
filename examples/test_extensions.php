@@ -58,10 +58,10 @@ test('mongodb', function() {
 
 // Test 5: Data Structures (ds)
 test('ds', function() {
-    $vector = new Ds\Vector([1, 2, 3]);
-    $vector->push(4);
+    $seq = new Ds\Seq([1, 2, 3]);
+    $seq->push(4);
     $map = new Ds\Map(['a' => 1, 'b' => 2]);
-    return $vector->count() === 4 && $map->count() === 2;
+    return $seq->count() === 4 && $map->count() === 2;
 });
 
 // Test 6: PSR extension

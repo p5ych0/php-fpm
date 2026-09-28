@@ -13,6 +13,9 @@ RUN apk add --no-cache --virtual .build-deps \
     freetype-dev libjpeg-turbo-dev libxml2-dev libuv-dev librdkafka-dev
 
 # Build and install PHP extensions
+# Pin: parallel >=1.2.14 segfaults with swoole loaded (swoole RINIT derefs a null
+# thread buffer in parallel threads; <=1.2.13 recovered via its SIGSEGV handler,
+# only while parallel loads before swoole). https://github.com/swoole/swoole-src/issues/6262
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure pgsql -with-pgsql=/usr/include/ \
     && mkdir -p /usr/src/php/ext/imagick \
@@ -26,7 +29,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     bcmath calendar intl exif gmp gettext \
     mbstring pcntl pgsql pdo_pgsql pdo_mysql zip \
     gd opcache soap sockets \
-    && pecl install -o -f igbinary ds raphf mongodb swoole uv parallel rdkafka \
+    && pecl install -o -f igbinary ds raphf mongodb swoole uv parallel-1.2.13 rdkafka \
     && cd /tmp \
     && pecl download redis \
     && tar xzf redis-*.tgz \

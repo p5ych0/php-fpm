@@ -108,10 +108,10 @@ try {
 // Test 5: Data Structures advanced usage
 echo "5. Testing Data Structures (ds) extension...\n";
 try {
-    // Vector operations
-    $vector = new Ds\Vector([1, 2, 3, 4, 5]);
-    $vector->push(6, 7, 8);
-    $vector->map(function($x) { return $x * 2; });
+    // Seq operations (ds 2.x replaces Vector/Deque/Stack/Queue with Seq)
+    $seq = new Ds\Seq([1, 2, 3, 4, 5]);
+    $seq->push(6, 7, 8);
+    $seq->map(function($x) { return $x * 2; });
     
     // Map operations
     $map = new Ds\Map(['a' => 1, 'b' => 2, 'c' => 3]);
@@ -123,12 +123,12 @@ try {
     $set->add(6);
     $set->remove(1);
     
-    // Stack operations
-    $stack = new Ds\Stack([1, 2, 3]);
+    // Stack operations (Seq push/pop)
+    $stack = new Ds\Seq([1, 2, 3]);
     $stack->push(4);
     $top = $stack->pop();
     
-    echo "   Vector: ✓ (count: " . $vector->count() . ")\n";
+    echo "   Seq: ✓ (count: " . $seq->count() . ")\n";
     echo "   Map: ✓ (filtered count: " . $filtered->count() . ")\n";
     echo "   Set: ✓ (count: " . $set->count() . ")\n";
     echo "   Stack: ✓ (top was: $top)\n";
