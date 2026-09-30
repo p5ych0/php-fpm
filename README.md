@@ -56,6 +56,14 @@ Contains the following extensions:
 * zlib
 * Zend OPcache + optional preload set with env var _PHP_OPCACHE_PRELOAD=path/to/preload.php_
 
+## Image and video formats
+
+* imagick: JPEG, PNG, GIF, WebP, AVIF, JPEG XL, SVG, TIFF, JPEG 2000, PDF (ghostscript); HEIC/HEIF read-only
+* gd: JPEG, PNG, GIF, WebP, AVIF (no HEIC; convert with imagick)
+* `ffmpeg` / `ffprobe` binaries for video uploads: H.264, HEVC (iPhone), VP9, AV1 decode and encode
+
+Check with `docker run --rm -v "$PWD/examples":/e <image> php /e/test_image_formats.php`.
+
 ## Runtime user/group mapping
 
 To avoid permission issues between your host and the container, you can map the container user to your host user via environment variables. Fallback aliases are also supported to ease migration:

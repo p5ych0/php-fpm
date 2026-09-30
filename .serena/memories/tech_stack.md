@@ -8,6 +8,7 @@
 - imagick: from PECL (3.8.1+; the GitHub `develop` branch is stale since 2025-03 and does not compile on PHP 8.5).
 - `php.ini` sets `opcache.enable_cli=1`: Octane/Horizon/scheduler are CLI SAPI; without it OPcache and PHP_OPCACHE_PRELOAD are silently inactive in workers (was the case until 2026-09-28).
 - Runtime-only apk deps in final stage: ghostscript (imagick PDF read), imagemagick, librdkafka, libuv, icu-libs, postgresql-libs, nodejs/npm (+ global chokidar-cli for `octane --watch`), supervisor, su-exec, shadow.
+- Media formats: Alpine's imagemagick is built with heic/jxl/rsvg delegates but splits those coders into `imagemagick-heic|jxl|svg` subpackages; installing them in the final stage is enough (imagick loads coders at runtime, no recompile). libheif pulls libde265+dav1d decoders; `libheif-aom` adds AVIF encode. `libheif-x265` deliberately omitted: HEIC is read-only (upload input only). gd built `--with-webp --with-avif` (needs libwebp-dev/libavif-dev in builder, libwebp/libavif in final). `ffmpeg` (~94 MiB, Alpine GPL build) is for video uploads. `examples/test_image_formats.php` + `examples/fixtures/sample.heic` cover all of it.
 - ICU data is English-only (Alpine `icu-data-en`): non-en locales in intl silently fall back to en. Pre-existing, not a regression.
 - Tooling baked in: composer (latest installer), phpunit.phar (latest).
 - Target app stack: Laravel 12 + Octane (Swoole) + Reverb + Redis queues.
