@@ -38,6 +38,8 @@ This PHP-FPM Docker image has been completely modernized to match OpenResty-styl
 - `NUMPROCS` - Number of queue worker processes (default: 1)
 - `PHP_OPCACHE_PRELOAD` - OPcache preload script path (default: empty)
 - `PHP_OPCACHE_FREQ` - OPcache revalidation frequency (default: 600)
+- `PHP_FPM_MAX_REQUESTS` - `pm.max_requests` for both pools (default: 1; CVE-2026-109619 mitigation)
+- `PHP_FPM_MEMORY_LIMIT` - `memory_limit` for both pools (default: -1; CVE-2026-109618 mitigation, pair with `mem_limit`)
 
 ## Usage Examples
 

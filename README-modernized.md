@@ -62,6 +62,11 @@ Set these when running the container:
 - `ENV_NUMPROCS`: Number of queue worker processes (default: 1)
 - `PHP_OPCACHE_PRELOAD`: Path to OPcache preload script
 - `PHP_OPCACHE_FREQ`: OPcache revalidation frequency (default: 600)
+- `PHP_FPM_MAX_REQUESTS`: `pm.max_requests` for both pools (default: 1, was 200)
+- `PHP_FPM_MEMORY_LIMIT`: `memory_limit` for both pools (default: -1, was 64M / 128M)
+
+The last two defaults mitigate CVE-2026-109618/109619, which PHP 7.4 will never get a fix for.
+With `-1`, set a container memory limit (`mem_limit`) instead.
 
 ## File Structure Changes
 

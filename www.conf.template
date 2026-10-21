@@ -135,7 +135,7 @@ pm.max_children = 32
 ; This can be useful to work around memory leaks in 3rd party libraries. For
 ; endless request processing specify '0'. Equivalent to PHP_FCGI_MAX_REQUESTS.
 ; Default Value: 0
-pm.max_requests = 200
+pm.max_requests = ${PHP_FPM_MAX_REQUESTS}
 
 ; The URI to view the FPM status page. If this value is not set, no URI will be
 ; recognized as a status page. It shows the following informations:
@@ -419,7 +419,7 @@ clear_env = no
 php_flag[display_errors] = off
 php_admin_value[error_log] = /var/log/php/error.log
 php_admin_flag[log_errors] = on
-php_admin_value[memory_limit] = 64M
+php_admin_value[memory_limit] = ${PHP_FPM_MEMORY_LIMIT}
 
 [backoffice]
 clear_env = no
@@ -432,10 +432,10 @@ pm.start_servers = 12
 pm.min_spare_servers = 6
 pm.max_spare_servers = 12
 pm.process_idle_timeout = 10s;
-pm.max_requests = 200
+pm.max_requests = ${PHP_FPM_MAX_REQUESTS}
 slowlog = /var/log/php/slow.back.log
 request_slowlog_timeout = 10s
 php_flag[display_errors] = off
 php_admin_value[error_log] = /var/log/php/error-back.log
 php_admin_flag[log_errors] = on
-php_admin_value[memory_limit] = 128M
+php_admin_value[memory_limit] = ${PHP_FPM_MEMORY_LIMIT}

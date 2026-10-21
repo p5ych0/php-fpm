@@ -96,12 +96,19 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
         soap \
         sockets
 
-# Install PECL extensions (MongoDB version compatible with PHP 7.4)
-RUN pecl install -o -f imagick igbinary psr ds raphf mongodb-1.17.2
+# Install PECL extensions, pinned to the versions shipped in the 2025-10 image:
+# unpinned, -f force-builds ds 2.x (needs PHP >= 8.2) and igbinary RCs.
+# PECL's CDN now sends chunked responses that this base image's PEAR can't parse
+# (lookups are skipped and pecl still exits 0), so fetch the tarballs with curl.
+RUN cd /tmp && \
+    for p in imagick-3.8.0 igbinary-3.2.16 psr-1.2.0 ds-1.6.0 raphf-2.0.2 mongodb-1.17.2 redis-6.2.0; do \
+        curl -fsSLO "https://pecl.php.net/get/$p.tgz" || exit 1; \
+    done && \
+    pecl install -o -f imagick-3.8.0.tgz igbinary-3.2.16.tgz psr-1.2.0.tgz ds-1.6.0.tgz raphf-2.0.2.tgz mongodb-1.17.2.tgz
 
 # Custom Redis installation with igbinary support
 RUN --mount=type=cache,target=/tmp/redis-build \
-    pecl download redis && \
+    cd /tmp && \
     tar -xf redis-*.tgz -C /tmp/redis-build --strip-components=1 && \
     cd /tmp/redis-build && \
     phpize && \
@@ -171,9 +178,14 @@ GROUP_NAME=${GROUP_NAME:-www-data}
 NUMPROCS=${NUMPROCS:-4}
 PHP_OPCACHE_PRELOAD=${PHP_OPCACHE_PRELOAD:-}
 PHP_OPCACHE_FREQ=${PHP_OPCACHE_FREQ:-600}
+# PHP 7.4 gets no fix for CVE-2026-109618/109619. One request per worker stops stale
+# state reaching the next request; no memory_limit removes the controllable OOM.
+# Pair -1 with a container memory limit. Previous values: 200, 64M (www) / 128M (backoffice).
+PHP_FPM_MAX_REQUESTS=${PHP_FPM_MAX_REQUESTS:-1}
+PHP_FPM_MEMORY_LIMIT=${PHP_FPM_MEMORY_LIMIT:--1}
 
-# Export environment variables for supervisor
-export USER_ID GROUP_ID USER_NAME GROUP_NAME NUMPROCS PHP_OPCACHE_PRELOAD PHP_OPCACHE_FREQ
+# Export environment variables for supervisor and envsubst
+export USER_ID GROUP_ID USER_NAME GROUP_NAME NUMPROCS PHP_OPCACHE_PRELOAD PHP_OPCACHE_FREQ PHP_FPM_MAX_REQUESTS PHP_FPM_MEMORY_LIMIT
 
 # Create group if it doesn't exist
 if ! getent group "${GROUP_NAME}" >/dev/null 2>&1; then
@@ -198,7 +210,7 @@ if ! getent passwd "${USER_NAME}" >/dev/null 2>&1; then
 fi
 
 # Process configuration templates
-envsubst '${USER_NAME} ${GROUP_NAME} ${USER_ID} ${GROUP_ID}' < /usr/local/etc/php-fpm.d/www.conf.template > /usr/local/etc/php-fpm.d/www.conf
+envsubst '${USER_NAME} ${GROUP_NAME} ${USER_ID} ${GROUP_ID} ${PHP_FPM_MAX_REQUESTS} ${PHP_FPM_MEMORY_LIMIT}' < /usr/local/etc/php-fpm.d/www.conf.template > /usr/local/etc/php-fpm.d/www.conf
 envsubst '${USER_NAME}' < /var/spool/cron/crontabs/root.template > /var/spool/cron/crontabs/root
 envsubst '${USER_NAME}' < /etc/supervisor.d/laravel.ini.template > /etc/supervisor.d/laravel.ini
 envsubst '${PHP_OPCACHE_PRELOAD} ${PHP_OPCACHE_FREQ} ${USER_NAME}' < /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini.template > /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
